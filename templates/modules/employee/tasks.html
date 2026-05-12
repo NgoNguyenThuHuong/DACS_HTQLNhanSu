@@ -1,0 +1,332 @@
+{% extends "layout.html" %}
+
+{% block title %}Nhiệm vụ của tôi | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .task-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    .kanban-col {
+        background: rgba(241, 245, 249, 0.5);
+        border-radius: 20px;
+        padding: 1.25rem;
+        min-height: 400px;
+    }
+    .avatar-group {
+        display: flex;
+        align-items: center;
+    }
+    .avatar-group .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid white;
+        margin-left: -8px;
+    }
+    .avatar-group .avatar:first-child { margin-left: 0; }
+    
+    .filter-dropdown .dropdown-toggle::after { display: none; }
+    .filter-dropdown .btn {
+        background: #6366f1;
+        color: white;
+        border-radius: 12px;
+        padding: 8px 16px;
+        font-weight: 600;
+    }
+    
+    .activity-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 24px;
+        bottom: 0;
+        width: 1px;
+        background: #e2e8f0;
+    }
+    .activity-item:last-child::before { display: none; }
+    .activity-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #6366f1;
+        border: 3px solid white;
+        box-shadow: 0 0 0 1px #6366f1;
+    }
+    
+    .progress-glow {
+        box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Top Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-800 text-dark mb-1">Danh sách Nhiệm vụ</h2>
+            <p class="text-secondary small">Theo dõi tiến độ và hoàn thành các công việc được giao.</p>
+        </div>
+        <div class="dropdown filter-dropdown">
+            <button class="btn dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+                Bộ lọc thông minh <i class="fas fa-chevron-down ms-2 small"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg rounded-4" style="min-width: 250px;">
+                <li class="mb-2">
+                    <label class="small fw-bold text-secondary text-uppercase">Dự án</label>
+                    <select class="form-select form-select-sm border-0 bg-light">
+                        <option>Tất cả dự án</option>
+                        <option>HRM Upgrade</option>
+                        <option>Tuyển dụng Q2</option>
+                    </select>
+                </li>
+                <li class="mb-2">
+                    <label class="small fw-bold text-secondary text-uppercase">Độ ưu tiên</label>
+                    <div class="d-flex gap-2 mt-1">
+                        <span class="badge bg-danger-subtle text-danger border-0 px-2 py-1">High</span>
+                        <span class="badge bg-warning-subtle text-warning border-0 px-2 py-1">Medium</span>
+                        <span class="badge bg-info-subtle text-info border-0 px-2 py-1">Low</span>
+                    </div>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><button class="btn btn-primary btn-sm w-100 rounded-pill">Áp dụng</button></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Column -->
+        <div class="col-lg-8">
+            <!-- Summary Cards Section -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-800 mb-0">Công việc cần làm</h5>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ tasks|length }} Nhiệm vụ</span>
+            </div>
+            
+            <div class="row g-3 mb-5">
+                {% for task in tasks %}
+                <div class="col-md-6">
+                    <div class="task-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge rounded-pill border-0 
+                                {{ 'bg-danger-subtle text-danger' if task.priority == 'High' else 
+                                   ('bg-warning-subtle text-warning' if task.priority == 'Medium' else 'bg-success-subtle text-success') }} small">
+                                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> {{ task.priority|upper }}
+                            </span>
+                            <div class="dropdown">
+                                <i class="fas fa-ellipsis-v text-secondary cursor-pointer" data-bs-toggle="dropdown"></i>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                    <li><a class="dropdown-item small" href="#"><i class="fas fa-eye me-2"></i>Chi tiết</a></li>
+                                    <li><a class="dropdown-item small text-danger" href="#"><i class="fas fa-flag me-2"></i>Báo cáo</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h6 class="fw-800 mb-2 {{ 'text-decoration-line-through opacity-50' if task.status == 'Completed' else '' }}">{{ task.title }}</h6>
+                        <p class="small text-secondary mb-3 text-truncate-3" style="height: 3.6rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                            {{ task.description or 'Theo dõi liên độ và hoàn thành các công việc được giao đúng thời hạn để đạt hiệu quả cao.' }}
+                        </p>
+                        
+                        <div class="d-flex align-items-center gap-3 mb-3 text-secondary" style="font-size: 0.75rem;">
+                            <span><i class="far fa-calendar-alt me-1"></i> {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else '23/04/2026' }}</span>
+                            <span><i class="fas fa-paperclip me-1"></i> 1 file</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
+                            <div class="avatar-group">
+                                <img src="https://ui-avatars.com/api/?name=Bui+Quang&background=6366f1&color=fff" class="avatar" title="Bùi Quang">
+                                <img src="https://ui-avatars.com/api/?name=HR+User&background=10b981&color=fff" class="avatar" title="HR User">
+                                <div class="avatar bg-light text-secondary d-flex align-items-center justify-content-center small fw-bold">+1</div>
+                            </div>
+                            
+                            {% if task.status == 'Pending' %}
+                                <form action="{{ url_for('employee.update_task', task_id=task.id) }}" method="POST">
+                                    <input type="hidden" name="status" value="In_Progress">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold" style="font-size: 0.7rem;">Bắt đầu</button>
+                                </form>
+                            {% elif task.status == 'In_Progress' %}
+                                <form action="{{ url_for('employee.update_task', task_id=task.id) }}" method="POST">
+                                    <input type="hidden" name="status" value="Completed">
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold progress-glow" style="font-size: 0.7rem;">Hoàn thành</button>
+                                </form>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success border-0 px-3 py-2 rounded-pill small">
+                                    <i class="fas fa-check-double me-1"></i> Xong
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Kanban Section -->
+            <h5 class="fw-800 mb-4 d-flex align-items-center">
+                <i class="fas fa-columns text-primary me-2"></i> Bảng Kanban
+                <span class="badge bg-light text-secondary ms-2 small fw-normal">{{ tasks|length }} Nhiệm vụ</span>
+            </h5>
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="kanban-col">
+                        <div class="small fw-800 text-secondary text-uppercase mb-3 d-flex justify-content-between">
+                            Chưa bắt đầu <span class="badge bg-white text-secondary border shadow-sm">{{ tasks|selectattr('status', 'equalto', 'Pending')|list|length }}</span>
+                        </div>
+                        {% for task in tasks if task.status == 'Pending' %}
+                        <div class="glass-card p-3 mb-2 shadow-sm border-0">
+                            <div class="fw-bold small mb-1">{{ task.title }}</div>
+                            <div class="tiny text-secondary mb-2"><i class="far fa-clock me-1"></i> {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else '23/04/2026' }}</div>
+                            <span class="badge {{ 'bg-danger-subtle text-danger' if task.priority == 'High' else 'bg-warning-subtle text-warning' }} tiny border-0">
+                                {{ task.priority }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="kanban-col">
+                        <div class="small fw-800 text-info text-uppercase mb-3 d-flex justify-content-between">
+                            Đang thực hiện <span class="badge bg-white text-info border shadow-sm">{{ tasks|selectattr('status', 'equalto', 'In_Progress')|list|length }}</span>
+                        </div>
+                        {% for task in tasks if task.status == 'In_Progress' %}
+                        <div class="glass-card p-3 mb-2 shadow-sm border-0">
+                            <div class="fw-bold small mb-1 text-info">{{ task.title }}</div>
+                            <div class="tiny text-secondary mb-2"><i class="fas fa-paperclip me-1"></i> Hồ sơ đính kèm</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-info-subtle text-info tiny border-0">{{ task.priority }}</span>
+                                <img src="https://ui-avatars.com/api/?name={{ current_user.fullname|urlencode }}&size=20&background=6366f1&color=fff" class="rounded-circle">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="kanban-col">
+                        <div class="small fw-800 text-success text-uppercase mb-3 d-flex justify-content-between">
+                            Review / Xong <span class="badge bg-white text-success border shadow-sm">{{ tasks|selectattr('status', 'equalto', 'Completed')|list|length }}</span>
+                        </div>
+                        {% for task in tasks if task.status == 'Completed' %}
+                        <div class="glass-card p-3 mb-2 shadow-sm border-0 opacity-75">
+                            <div class="fw-bold small mb-1">{{ task.title }}</div>
+                            <div class="text-success small"><i class="fas fa-check-circle me-1"></i> Đã duyệt</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Column -->
+        <div class="col-lg-4">
+            <!-- Progress Widget -->
+            <div class="card border-0 p-4 shadow-sm mb-4" style="border-radius: 24px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+                <h6 class="fw-bold mb-3 text-white opacity-75">CHI TIẾT TIẾN ĐỘ</h6>
+                {% set completed = tasks|selectattr('status', 'equalto', 'Completed')|list|length %}
+                {% set total = tasks|length %}
+                {% set percent = (completed / total * 100)|int if total > 0 else 0 %}
+                
+                <div class="text-center mb-4 mt-2">
+                    <div class="h1 fw-800 mb-0 text-white">{{ percent }}%</div>
+                    <div class="small text-uppercase fw-bold opacity-75">HOÀN THÀNH</div>
+                </div>
+                
+                <div class="progress mb-4" style="height: 12px; border-radius: 10px; background: rgba(255,255,255,0.2); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                    <div class="progress-bar bg-white progress-glow" role="progressbar" style="width: {{ percent }}%; border-radius: 10px;"></div>
+                </div>
+                
+                <p class="small mb-0 opacity-75">Hãy cố gắng hoàn thành các công việc đúng hạn để duy trì chỉ số hiệu suất cao!</p>
+            </div>
+            
+            <!-- Donut Chart Widget -->
+            <div class="glass-card p-4 shadow-sm mb-4 border-0" style="border-radius: 24px;">
+                <h6 class="fw-800 text-dark mb-4">Phân loại mức độ ưu tiên</h6>
+                <div style="height: 200px; position: relative;">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Activity Widget -->
+            <div class="glass-card p-4 shadow-sm border-0" style="border-radius: 24px;">
+                <h6 class="fw-800 text-dark mb-4">Hoạt động Gần đây</h6>
+                <div class="activity-feed">
+                    <div class="activity-item">
+                        <div class="activity-icon"></div>
+                        <div class="small fw-bold">Bùi Quang Giám Đốc <span class="fw-normal text-secondary">đã phê duyệt báo cáo</span></div>
+                        <div class="tiny text-muted">24/04/2026 lúc 10:30 AM</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #10b981; box-shadow: 0 0 0 1px #10b981;"></div>
+                        <div class="small fw-bold">Nhiệm vụ mới <span class="fw-normal text-secondary">'Phê duyệt nghỉ phép' được giao</span></div>
+                        <div class="tiny text-muted">24/04/2026 lúc 09:15 AM</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #f59e0b; box-shadow: 0 0 0 1px #f59e0b;"></div>
+                        <div class="small fw-bold">Bạn <span class="fw-normal text-secondary">đã bắt đầu làm 'Lập kế hoạch Q3'</span></div>
+                        <div class="tiny text-muted">23/04/2026 lúc 04:45 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    
+    // Đếm dữ liệu thực tế
+    {% set high = tasks|selectattr('priority', 'equalto', 'High')|list|length %}
+    {% set med = tasks|selectattr('priority', 'equalto', 'Medium')|list|length %}
+    {% set low = tasks|selectattr('priority', 'equalto', 'Low')|list|length %}
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+                data: [{{ high if tasks else 30 }}, {{ med if tasks else 50 }}, {{ low if tasks else 20 }}],
+                backgroundColor: ['#ef4444', '#f59e0b', '#06b6d4'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            cutout: '75%',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { size: 11, weight: '600' }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

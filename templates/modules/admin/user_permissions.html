@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+
+{% block title %}Cấu hình Quyền | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Cấu hình quyền cá nhân</h3>
+        <p class="text-secondary small">Thiết lập quyền hạn đặc biệt cho <strong>{{ user.fullname }}</strong> ({{ user.username }})</p>
+    </div>
+    <a href="{{ url_for('hr.employees_list') }}" class="btn btn-light px-4 rounded-pill border shadow-sm small fw-bold text-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Quay lại
+    </a>
+</div>
+
+<div class="alert alert-info rounded-4 border-0 shadow-sm mb-4 small">
+    <i class="fas fa-circle-info me-2"></i> <strong>Lưu ý:</strong> Các quyền được thiết lập tại đây sẽ <strong>ghi đè</strong> lên quyền mặc định của nhóm <strong>{{ user.role }}</strong>.
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr class="small fw-bold text-secondary text-uppercase">
+                    <th class="ps-4">Chức năng hệ thống</th>
+                    <th class="text-center">Trạng thái quyền</th>
+                    <th class="text-end pe-4">Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perm in all_perms %}
+                {% set is_allowed = user_perms[perm] %}
+                <tr>
+                    <td class="ps-4 fw-medium">{{ perm }}</td>
+                    <td class="text-center">
+                        <div class="form-check form-switch d-inline-block">
+                            <input class="form-check-input user-perm-switch" type="checkbox" role="switch" 
+                                   data-user-id="{{ user.id }}" data-perm="{{ perm }}"
+                                   {% if is_allowed %}checked{% endif %} style="width: 3em; height: 1.5em; cursor: pointer;">
+                        </div>
+                    </td>
+                    <td class="text-end pe-4">
+                        <span class="badge {% if is_allowed %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} border-0">
+                            {% if is_allowed %}Được phép{% else %}Bị chặn{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Toast thông báo -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="permToast" class="toast align-items-center text-white bg-success border-0 rounded-4 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="fas fa-check-circle me-2"></i> Cập nhật quyền cá nhân thành công!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.user-perm-switch').forEach(sw => {
+    sw.addEventListener('change', function() {
+        const userId = this.dataset.userId;
+        const perm = this.dataset.perm;
+        const value = this.checked;
+
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        formData.append('permission', perm);
+        formData.append('value', value);
+
+        fetch("{{ url_for('hr.update_user_permission') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                const toast = new bootstrap.Toast(document.getElementById('permToast'));
+                toast.show();
+                const row = this.closest('tr');
+                const badge = row.querySelector('.badge');
+                badge.innerText = value ? 'Được phép' : 'Bị chặn';
+                badge.className = `badge ${value ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} border-0`;
+            } else {
+                alert('Lỗi: ' + (data.message || 'Không thể cập nhật'));
+                this.checked = !value;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            this.checked = !value;
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

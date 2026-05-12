@@ -1,0 +1,330 @@
+{% extends "layout.html" %}
+{% block title %}Chi tiết Ứng viên | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+.tab-nav { display:flex; gap:8px; border-bottom: 2px solid #f0f0f0; margin-bottom:24px; }
+.tab-btn { background:none; border:none; padding:10px 20px; font-weight:600; font-size:0.85rem; color:#9ca3af; border-bottom:3px solid transparent; margin-bottom:-2px; cursor:pointer; transition:all 0.2s; border-radius:8px 8px 0 0; }
+.tab-btn.active { color:#6366f1; border-bottom-color:#6366f1; background:#f5f3ff; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+.answer-card { border-radius:14px; border:1px solid #f0f0f0; padding:16px; margin-bottom:12px; transition:all 0.2s; }
+.answer-card.correct { border-color:#bbf7d0; background:#f0fdf4; }
+.answer-card.wrong { border-color:#fecaca; background:#fef2f2; }
+.answer-card.essay { border-color:#e0e7ff; background:#eef2ff; }
+.option-badge { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; font-weight:700; font-size:0.75rem; flex-shrink:0; }
+.option-badge.selected-correct { background:#10b981; color:#fff; }
+.option-badge.selected-wrong { background:#ef4444; color:#fff; }
+.option-badge.correct-ans { background:#d1fae5; color:#10b981; border:2px solid #10b981; }
+.option-badge.normal { background:#f3f4f6; color:#6b7280; }
+.decide-btn { border-radius:14px; padding:12px 24px; font-weight:700; font-size:0.9rem; transition:all 0.2s; }
+.decide-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Back -->
+<a href="{{ url_for('hr.recruitment_index') }}" class="btn btn-light btn-sm rounded-pill mb-4 border shadow-none small">
+    <i class="fas fa-arrow-left me-2"></i>QUAY LẠI DANH SÁCH
+</a>
+
+{% set latest = results[-1] if results else none %}
+
+<!-- Header ứng viên -->
+<div class="card border-0 shadow-sm mb-4 p-4" style="border-radius:24px; background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(16,185,129,0.05));">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-4">
+            <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:#fff;">
+                {{ candidate.fullname[0]|upper }}
+            </div>
+            <div>
+                <h4 class="fw-800 text-dark mb-1">{{ candidate.fullname }}</h4>
+                <div class="text-secondary small">
+                    <i class="fas fa-briefcase me-1"></i>{{ candidate.job.title if candidate.job else 'N/A' }}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-calendar me-1"></i>{{ candidate.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                {% if candidate.reviewed_at %}
+                <div class="small text-secondary">
+                    <i class="fas fa-user-check me-1"></i>Đã duyệt lúc {{ candidate.reviewed_at.strftime('%H:%M %d/%m/%Y') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            {% if latest %}
+            <div class="text-center">
+                <div style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:#9ca3af;" class="mb-1">Điểm thi</div>
+                <div class="fw-800" style="font-size:2rem; line-height:1;
+                    color:{{ '#10b981' if latest.score >= 7 else ('#f59e0b' if latest.score >= 5 else '#ef4444') }};">
+                    {{ latest.score }}<span style="font-size:1rem;">/10</span>
+                </div>
+                <div style="font-size:0.7rem;" class="{{ 'text-success' if latest.passed else 'text-danger' }} fw-bold">
+                    {{ '✅ ĐẠT' if latest.passed else '❌ CHƯA ĐẠT' }}
+                </div>
+            </div>
+            {% endif %}
+            <span class="badge rounded-pill px-4 py-2
+                {% if candidate.status == 'Applied'  %}bg-primary-subtle text-primary
+                {% elif candidate.status == 'Testing' %}bg-warning-subtle text-warning
+                {% elif candidate.status == 'Passed'  %}bg-success-subtle text-success
+                {% else %}bg-danger-subtle text-danger{% endif %}"
+                  style="font-size:0.8rem; font-weight:700;">
+                {% if candidate.status == 'Applied'  %}📄 Mới nộp hồ sơ
+                {% elif candidate.status == 'Testing' %}📝 Đang thi tuyển
+                {% elif candidate.status == 'Passed'  %}✅ Đã trúng tuyển
+                {% else %}❌ Không đạt{% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sidebar trái -->
+    <div class="col-lg-4">
+        <!-- Thông tin liên hệ -->
+        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:20px; background:rgba(255,255,255,0.85);">
+            <h6 class="fw-bold mb-4 border-bottom pb-3"><i class="fas fa-address-card me-2 text-primary"></i>Thông tin ứng viên</h6>
+            <div class="mb-3">
+                <div class="small text-secondary text-uppercase fw-bold mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Email</div>
+                <div class="fw-bold small"><i class="fas fa-envelope me-2 text-secondary"></i>{{ candidate.email }}</div>
+            </div>
+            <div class="mb-3">
+                <div class="small text-secondary text-uppercase fw-bold mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">SĐT</div>
+                <div class="fw-bold small"><i class="fas fa-phone me-2 text-secondary"></i>{{ candidate.phone or '—' }}</div>
+            </div>
+            <div class="mb-3">
+                <div class="small text-secondary text-uppercase fw-bold mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Email thông báo</div>
+                {% if candidate.email_sent %}
+                    <span class="badge bg-success-subtle text-success rounded-pill small"><i class="fas fa-check me-1"></i>Đã gửi</span>
+                {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill small">Chưa gửi</span>
+                {% endif %}
+            </div>
+            {% if candidate.cv_path %}
+            <button onclick="viewCV('{{ url_for('static', filename='uploads/cv/' + candidate.cv_path) }}')"
+               class="btn btn-outline-primary w-100 rounded-pill py-2 fw-bold small mt-2">
+                <i class="fas fa-file-pdf me-2"></i>XEM CV GỐC
+            </button>
+            {% else %}
+            <div class="text-secondary small text-center py-2 opacity-50"><i class="fas fa-file-slash me-1"></i>Chưa nộp CV</div>
+            {% endif %}
+        </div>
+
+        <!-- Quyết định tuyển dụng -->
+        {% if candidate.status not in ['Passed', 'Failed'] %}
+        <div class="card border-0 shadow-sm p-4" style="border-radius:20px; background:rgba(255,255,255,0.85);">
+            <h6 class="fw-bold mb-3"><i class="fas fa-gavel me-2 text-warning"></i>Quyết định tuyển dụng</h6>
+            <p class="small text-secondary mb-3">Sau khi xem xét hồ sơ và kết quả thi, hãy đưa ra quyết định. Email sẽ tự động gửi đến ứng viên.</p>
+            <form action="{{ url_for('hr.decide_candidate', can_id=candidate.id) }}" method="POST">
+                <div class="mb-3">
+                    <label class="small fw-bold text-secondary text-uppercase mb-1" style="font-size:0.65rem;">Ghi chú (tuỳ chọn)</label>
+                    <textarea name="notes" class="form-control rounded-3 border-0 bg-light small" rows="3"
+                              placeholder="Lý do, ghi chú thêm...">{{ candidate.notes or '' }}</textarea>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" name="decision" value="Passed"
+                            class="decide-btn btn btn-success fw-bold">
+                        <i class="fas fa-check-circle me-2"></i>✅ DUYỆT — GỬI EMAIL CHÚC MỪNG
+                    </button>
+                    <button type="submit" name="decision" value="Failed"
+                            class="decide-btn btn btn-danger fw-bold">
+                        <i class="fas fa-times-circle me-2"></i>❌ TỪ CHỐI — GỬI EMAIL THÔNG BÁO
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm p-4" style="border-radius:20px; background:rgba(255,255,255,0.85);">
+            <h6 class="fw-bold mb-3"><i class="fas fa-check-double me-2 text-success"></i>Đã xử lý</h6>
+            {% if candidate.notes %}
+            <div class="small text-secondary"><strong>Ghi chú:</strong> {{ candidate.notes }}</div>
+            {% endif %}
+            {% if candidate.reviewed_at %}
+            <div class="small text-secondary mt-2">Duyệt lúc: {{ candidate.reviewed_at.strftime('%H:%M %d/%m/%Y') }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Khu vực chính - Tab content -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4" style="border-radius:20px; background:rgba(255,255,255,0.85);">
+            {% if results %}
+            {% set result = results[-1] %}
+
+            <!-- Tab navigation -->
+            <div class="tab-nav">
+                <button class="tab-btn active" id="btn-mcq" onclick="switchTab('mcq', this)">
+                    <i class="fas fa-check-square me-1"></i>Trắc nghiệm
+                    <span class="badge bg-primary-subtle text-primary ms-1" style="font-size:0.65rem;">
+                        {{ result.mcq_correct }}/{{ result.mcq_total }}
+                    </span>
+                </button>
+                <button class="tab-btn" id="btn-essay" onclick="switchTab('essay', this)">
+                    <i class="fas fa-pen me-1"></i>Tự luận
+                    {% set essay_count = result.answers|selectattr('question.question_type', 'eq', 'Essay')|list|length %}
+                    {% if essay_count > 0 %}
+                    <span class="badge bg-indigo-subtle ms-1" style="font-size:0.65rem; background:#e0e7ff; color:#4f46e5;">{{ essay_count }} câu</span>
+                    {% endif %}
+                </button>
+                <button class="tab-btn" id="btn-cv" onclick="switchTab('cv', this)">
+                    <i class="fas fa-file-pdf me-1"></i>Hồ sơ CV
+                </button>
+                <button class="tab-btn" id="btn-feedback" onclick="switchTab('feedback', this)">
+                    <i class="fas fa-comment me-1"></i>Nhận xét HR
+                </button>
+            </div>
+
+            <!-- Tab: Trắc nghiệm -->
+            <div id="tab-mcq" class="tab-pane active">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="small text-secondary">Kết quả chấm tự động</span>
+                    <span class="fw-bold {{ 'text-success' if result.passed else 'text-danger' }}">
+                        {{ result.mcq_correct }}/{{ result.mcq_total }} câu đúng — {{ result.score }}/10
+                        {{ '✅ ĐẠT' if result.passed else '❌ CHƯA ĐẠT' }}
+                    </span>
+                </div>
+                {% for ans in result.answers %}
+                {% if ans.question.question_type == 'MCQ' %}
+                <div class="answer-card {{ 'correct' if ans.is_correct else 'wrong' }}">
+                    <div class="d-flex gap-2 align-items-start mb-2">
+                        <i class="fas {{ 'fa-check-circle text-success' if ans.is_correct else 'fa-times-circle text-danger' }} mt-1 flex-shrink-0"></i>
+                        <div class="fw-bold small text-dark">{{ ans.question.question_text }}</div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        {% for opt, label in [('A', ans.question.option_a), ('B', ans.question.option_b), ('C', ans.question.option_c), ('D', ans.question.option_d)] %}
+                        {% if label %}
+                        <div class="d-flex align-items-center gap-2 px-3 py-1 rounded-3
+                            {% if opt == ans.question.correct_option and opt == ans.given_answer %}bg-success-subtle border border-success
+                            {% elif opt == ans.given_answer and opt != ans.question.correct_option %}bg-danger-subtle border border-danger
+                            {% elif opt == ans.question.correct_option %}bg-success-subtle
+                            {% else %}bg-light{% endif %}"
+                             style="font-size:0.8rem;">
+                            <span class="option-badge
+                                {{ 'selected-correct' if opt == ans.question.correct_option and opt == ans.given_answer else
+                                   'selected-wrong' if opt == ans.given_answer else
+                                   'correct-ans' if opt == ans.question.correct_option else 'normal' }}">
+                                {{ opt }}
+                            </span>
+                            {{ label }}
+                            {% if opt == ans.given_answer %}<i class="fas fa-arrow-left ms-1 small text-secondary"></i>{% endif %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-secondary opacity-50">
+                    <i class="fas fa-check-square fa-2x mb-2 d-block"></i>
+                    Không có câu hỏi trắc nghiệm.
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Tab: Tự luận -->
+            <div id="tab-essay" class="tab-pane">
+                {% set essay_answers = result.answers|selectattr('question.question_type', 'eq', 'Essay')|list %}
+                {% if essay_answers %}
+                    {% for ans in essay_answers %}
+                    <div class="answer-card essay">
+                        <div class="fw-bold small text-dark mb-3">
+                            <i class="fas fa-quote-left me-2 text-indigo-400" style="color:#6366f1;"></i>
+                            {{ ans.question.question_text }}
+                        </div>
+                        <div class="p-3 bg-white rounded-3 border-0" style="font-size:0.85rem; line-height:1.7; color:#374151; min-height:60px;">
+                            {{ ans.given_answer or '(Ứng viên không trả lời)' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-secondary opacity-50">
+                    <i class="fas fa-pen-to-square fa-2x mb-2 d-block"></i>
+                    Không có câu hỏi tự luận trong bài thi này.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Tab: Nhận xét HR -->
+            <div id="tab-feedback" class="tab-pane">
+                <form action="{{ url_for('hr.candidate_detail', can_id=candidate.id) }}" method="POST">
+                    <input type="hidden" name="result_id" value="{{ result.id }}">
+                    <div class="mb-3">
+                        <label class="small fw-bold text-secondary text-uppercase mb-2" style="font-size:0.65rem; letter-spacing:0.05em;">
+                            <i class="fas fa-comment-dots me-1"></i>Nhận xét của HR về bài tự luận
+                        </label>
+                        <textarea name="hr_feedback" class="form-control rounded-4 p-3 border-0 bg-light" rows="6"
+                                  placeholder="Nhập nhận xét về câu trả lời tự luận, thái độ, tiềm năng của ứng viên...">{{ result.hr_feedback or '' }}</textarea>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="small text-secondary">
+                            {% if result.status == 'Completed' %}
+                            <i class="fas fa-check-circle text-success me-1"></i>Đã lưu nhận xét
+                            {% else %}
+                            <i class="fas fa-clock text-warning me-1"></i>Chưa có nhận xét
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                            <i class="fas fa-save me-2"></i>LƯU NHẬN XÉT
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab: Hồ sơ CV -->
+            <div id="tab-cv" class="tab-pane">
+                <div class="cv-container rounded-4 overflow-hidden border" style="height: 800px; background: #f8fafc;">
+                    {% if candidate.cv_path %}
+                        <iframe id="cv-viewer" src="{{ url_for('static', filename='uploads/cv/' + candidate.cv_path) }}"
+                                width="100%" height="100%" frameborder="0"></iframe>
+                    {% else %}
+                        <div class="h-100 d-flex flex-column align-items-center justify-content-center text-secondary">
+                            <i class="fas fa-file-circle-xmark fa-4x mb-3 opacity-20"></i>
+                            <div class="fw-bold fs-5">Chưa có file CV</div>
+                            <p class="small">Ứng viên này chưa tải lên hồ sơ năng lực.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% else %}
+            <div class="text-center py-5 text-secondary opacity-50">
+                <i class="fas fa-file-circle-question fa-3x mb-3 d-block"></i>
+                <div class="fw-bold">Ứng viên chưa hoàn thành bài thi nào.</div>
+                <div class="small mt-1">Trạng thái hiện tại: {{ candidate.status }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    // Nếu có truyền btn (đối tượng elements)
+    if (btn) {
+        document.getElementById('tab-' + tabName).classList.add('active');
+        btn.classList.add('active');
+    } else {
+        // Nếu gọi từ bên ngoài không có đối tượng btn, tìm theo ID
+        document.getElementById('tab-' + tabName).classList.add('active');
+        const targetBtn = document.getElementById('btn-' + tabName);
+        if (targetBtn) targetBtn.classList.add('active');
+    }
+}
+
+function viewCV(url) {
+    switchTab('cv');
+    // Có thể cập nhật lại src nếu cần load động
+    const viewer = document.getElementById('cv-viewer');
+    if (viewer && url) {
+        viewer.src = url;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý Tài khoản & Quyền | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Tài khoản & Quyền hạn</h3>
+        <p class="text-secondary small">Quản lý quyền truy cập và bảo mật cho từng thành viên trong hệ thống.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Tóm tắt phân quyền -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 24px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary rounded-3 p-3 me-3">
+                    <i class="fas fa-shield-halved fa-lg"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Bảo mật hệ thống</h6>
+                    <p class="tiny opacity-75 mb-0">Thiết lập quyền dựa trên vai trò</p>
+                </div>
+            </div>
+            <div class="small opacity-75 mb-4">
+                Hệ thống sử dụng cơ chế Phân quyền dựa trên vai trò (RBAC). Bạn có thể ghi đè quyền cụ thể cho từng cá nhân nếu cần thiết.
+            </div>
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="tiny opacity-75">Vai trò Admin</span>
+                    <span class="badge bg-white text-dark tiny px-2">Toàn quyền</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="tiny opacity-75">Vai trò HR</span>
+                    <span class="badge bg-primary tiny px-2">Quản lý NS & TD</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="tiny opacity-75">Vai trò Nhân viên</span>
+                    <span class="badge bg-secondary tiny px-2">Cá nhân</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách tài khoản -->
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm p-4" style="border-radius: 24px;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="border-0 text-secondary tiny text-uppercase">Tài khoản</th>
+                            <th class="border-0 text-secondary tiny text-uppercase">Vai trò</th>
+                            <th class="border-0 text-secondary tiny text-uppercase text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://ui-avatars.com/api/?name={{ emp.fullname|urlencode }}&background=6366f1&color=fff" width="35" height="35" class="rounded-circle me-3">
+                                    <div>
+                                        <div class="fw-bold small">{{ emp.fullname }}</div>
+                                        <div class="text-secondary tiny">@{{ emp.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1 border-0 
+                                    {{ 'bg-dark' if emp.role == 'Admin' else ('bg-primary-subtle text-primary' if emp.role == 'HR' else 'bg-light text-secondary border') }}" style="font-size: 0.65rem;">
+                                    {{ emp.role|upper }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('hr.user_permissions', emp_id=emp.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold tiny">
+                                    <i class="fas fa-key me-1"></i> Phân quyền
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

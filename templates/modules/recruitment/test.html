@@ -1,0 +1,188 @@
+{% extends "public_layout.html" %}
+
+{% block title %}Bài thi Tuyển dụng | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<!-- Sticky Header for Exam Info & Timer -->
+<div class="exam-sticky-header animate-slide-up shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-800 text-dark mb-0">Bài thi Tuyển dụng</h5>
+            <div class="progress-pill mt-2" style="width: 200px; background: rgba(255,255,255,0.5);">
+                <div id="examProgressBar" class="progress-pill-inner" style="width: 0%; background: var(--success);"></div>
+            </div>
+            <p class="tiny text-secondary mt-1 mb-0 fw-bold">TIẾN ĐỘ: <span id="progressText">0/{{ exam.questions|length }}</span> CÂU HỎI</p>
+        </div>
+        <div class="text-end d-flex align-items-center gap-3">
+            <div class="text-end">
+                <div id="countdown" class="badge bg-danger p-2 rounded-3 h5 fw-bold mb-0 shadow-sm" style="min-width: 80px;">{{ exam.duration_minutes }}:00</div>
+                <p class="tiny text-secondary mt-1 mb-0 fw-bold uppercase letter-spacing-1">Còn lại</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-9 col-lg-8 animate-slide-up">
+        <div class="glass-card mb-5">
+            <div class="p-4 p-md-5 border-bottom bg-light rounded-top-4">
+                <h4 class="fw-800 text-dark mb-1">{{ exam.title }}</h4>
+                <p class="text-secondary small mb-0">Vui lòng đọc kỹ câu hỏi và lựa chọn phương án trả lời chính xác nhất.</p>
+            </div>
+            <div class="p-4 p-md-5">
+
+            <form id="examForm" action="{{ url_for('recruitment.submit_test', candidate_id=candidate.id) }}" method="POST">
+                <input type="hidden" name="exam_id" value="{{ exam.id }}">
+                
+                {% for q in exam.questions %}
+                <div class="question-block mb-5 p-4 rounded-4 transition-all border border-transparent" id="block_q_{{ q.id }}">
+                    <h6 class="fw-bold mb-4 d-flex gap-3">
+                        <span class="d-flex align-items-center justify-content-center bg-primary text-white rounded-circle shadow-sm" style="width: 32px; height: 32px; flex-shrink: 0; font-size: 0.8rem;">{{ loop.index }}</span>
+                        <div class="text-dark fs-5 pt-1">{{ q.question_text }}</div>
+                    </h6>
+
+                    {% if q.question_type == 'MCQ' %}
+                    <div class="row g-3 px-md-4">
+                        {% for opt, label in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                        <div class="col-md-6">
+                            <label class="option-card" for="q_{{ q.id }}_{{ opt|lower }}">
+                                <input type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_{{ opt|lower }}" value="{{ opt }}" required onchange="updateProgress()">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="opt-letter fw-800 text-primary bg-primary-light rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">{{ opt }}</div>
+                                    <div class="opt-text small fw-500">{{ label }}</div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="px-md-4 mt-3">
+                        <textarea name="q_{{ q.id }}" class="form-control glass-input" rows="5" placeholder="Nhập câu trả lời chi tiết của bạn tại đây..." oninput="updateProgress()"></textarea>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="d-grid mt-5 pt-4 border-top">
+                    <button type="button" onclick="confirmSubmit()" class="btn btn-primary btn-lg rounded-pill fw-bold py-3 shadow-lg hover-scale">
+                        HOÀN TẤT VÀ NỘP BÀI THI <i class="fas fa-check-circle ms-2"></i>
+                    </button>
+                    <!-- Hidden submit button to ensure compatibility -->
+                    <button type="submit" id="hiddenSubmitBtn" class="d-none"></button>
+                    <p class="text-center mt-3 small text-secondary">
+                        <i class="fas fa-info-circle me-1"></i> Hệ thống sẽ tự động nộp bài khi thời gian đếm ngược kết thúc.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-5 text-center">
+                <div class="text-warning mb-4">
+                    <i class="fas fa-exclamation-circle fa-4x pulse-animation"></i>
+                </div>
+                <h4 class="fw-800 text-dark mb-3">Xác nhận nộp bài?</h4>
+                <p class="text-secondary mb-4">Bạn chưa thể chỉnh sửa bài làm sau khi đã nộp. Bạn có chắc chắn muốn kết thúc bài thi ngay bây giờ?</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Kiểm tra lại</button>
+                    <button type="button" onclick="document.getElementById('hiddenSubmitBtn').click()" class="btn btn-primary rounded-pill px-4 fw-bold">Nộp bài ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let duration = {{ exam.duration_minutes }} * 60;
+    const timerElement = document.getElementById('countdown');
+    const form = document.getElementById('examForm');
+    const totalQuestions = {{ exam.questions|length }};
+
+    // Countdown Timer
+    const countdown = setInterval(function() {
+        let minutes = Math.floor(duration / 60);
+        let seconds = duration % 60;
+        
+        timerElement.innerText = minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+        
+        if (duration <= 30) {
+            timerElement.classList.replace('bg-danger', 'bg-warning');
+            timerElement.classList.add('pulse-animation');
+        }
+
+        if (duration <= 0) {
+            clearInterval(countdown);
+            window.alert("Hết thời gian làm bài! Hệ thống đang tự động nộp bài.");
+            form.submit();
+        }
+        duration--;
+    }, 1000);
+
+    // Progress Tracking
+    function updateProgress() {
+        let answered = 0;
+        
+        // Multi-choice
+        const radios = form.querySelectorAll('input[type="radio"]:checked');
+        const answeredIds = new Set();
+        radios.forEach(r => answeredIds.add(r.name));
+        
+        // Textareas
+        const textareas = form.querySelectorAll('textarea');
+        textareas.forEach(t => {
+            if (t.value.trim().length > 0) answeredIds.add(t.name);
+        });
+
+        answered = answeredIds.size;
+        const percent = (answered / totalQuestions) * 100;
+        
+        document.getElementById('examProgressBar').style.width = percent + '%';
+        document.getElementById('progressText').innerText = answered + '/' + totalQuestions;
+
+        // Visual feedback for answered question blocks
+        form.querySelectorAll('.question-block').forEach(block => {
+            const inputs = block.querySelectorAll('input:checked, textarea');
+            let isAnswered = false;
+            inputs.forEach(i => {
+                if (i.type === 'radio' || (i.tagName === 'TEXTAREA' && i.value.trim().length > 0)) {
+                    isAnswered = true;
+                }
+            });
+            
+            if (isAnswered) {
+                block.classList.add('bg-light');
+                block.style.borderColor = 'rgba(99, 102, 241, 0.1)';
+            }
+        });
+
+        // Toggle selected class for option cards
+        form.querySelectorAll('.option-card').forEach(card => {
+            const radio = card.querySelector('input');
+            if (radio && radio.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    }
+
+    function confirmSubmit() {
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+
+    // Initialize progress
+    updateProgress();
+</script>
+{% endblock %}
+

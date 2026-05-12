@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block title %}Hồ sơ Cá nhân - HTQLNhanSu{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('avatar-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 1. Kiểm tra định dạng
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Chỉ chấp nhận định dạng JPG hoặc PNG.');
+        this.value = '';
+        return;
+    }
+
+    // 2. Kiểm tra dung lượng (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Dung lượng file không được vượt quá 2MB.');
+        this.value = '';
+        return;
+    }
+
+    // 3. Hiển thị preview
+    const reader = new FileReader();
+    const avatarImg = document.getElementById('profile-avatar');
+    const loading = document.getElementById('upload-loading');
+    
+    reader.onload = function(event) {
+        avatarImg.src = event.target.result;
+        avatarImg.style.opacity = '0.5';
+        loading.classList.remove('d-none');
+        
+        // 4. Upload lên server
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        fetch('/upload-avatar', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            avatarImg.style.opacity = '1';
+            loading.classList.add('d-none');
+            
+            if (data.success) {
+                // Cập nhật lại ảnh trên toàn bộ UI (nếu cần)
+                // Ở đây ảnh preview đã được set bằng FileReader rồi, 
+                // nhưng ta cập nhật lại từ URL server cho chính xác
+                avatarImg.src = data.avatar_url;
+                
+                // Hiển thị thông báo thành công (có thể dùng Toast hoặc Alert)
+                alert(data.message);
+                
+                // Tùy chọn: Reload trang để cập nhật sidebar
+                // window.location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            avatarImg.style.opacity = '1';
+            loading.classList.add('d-none');
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi upload ảnh.');
+        });
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-md-4 mb-4">
+        <!-- Profile Card -->
+        <div class="glass-card text-center p-4 h-100">
+            <div class="position-relative d-inline-block mb-4">
+                <div id="avatar-container" class="position-relative">
+                    {% if current_user.avatar and current_user.avatar != 'default_avatar.png' %}
+                        <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}" 
+                             id="profile-avatar" class="rounded-circle shadow-lg border border-4 border-white" 
+                             width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ current_user.fullname|urlencode }}&size=150&background=6366f1&color=fff" 
+                             id="profile-avatar" class="rounded-circle shadow-lg border border-4 border-white" 
+                             width="150" height="150">
+                    {% endif %}
+                    
+                    <div id="upload-loading" class="position-absolute top-50 start-50 translate-middle d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="position-absolute bottom-0 end-0 bg-success border border-4 border-white rounded-circle p-2 shadow-sm" title="Trực tuyến"></span>
+            </div>
+            
+            <h3 class="fw-800 mb-1 text-dark">{{ current_user.fullname }}</h3>
+            <p class="text-secondary mb-3">{{ current_user.employee_code }} • {{ current_user.role|upper }}</p>
+            
+            <div class="d-grid gap-2 mb-4">
+                <input type="file" id="avatar-input" class="d-none" accept="image/png, image/jpeg, image/jpg">
+                <button type="button" class="btn btn-primary rounded-pill py-2 shadow-sm" onclick="document.getElementById('avatar-input').click()">
+                    <i class="fas fa-camera me-2"></i> Đổi ảnh đại diện
+                </button>
+            </div>
+            
+            <hr class="my-4 opacity-10">
+            
+            <div class="text-start px-3">
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="icon-box-sm bg-primary-subtle text-primary me-3 rounded-3">
+                        <i class="fas fa-building fa-xs"></i>
+                    </div>
+                    <div>
+                        <div class="small text-secondary">Phòng ban</div>
+                        <div class="fw-bold">{{ current_user.department.name if current_user.department else 'N/A' }}</div>
+                    </div>
+                </div>
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="icon-box-sm bg-info-subtle text-info me-3 rounded-3">
+                        <i class="fas fa-envelope fa-xs"></i>
+                    </div>
+                    <div>
+                        <div class="small text-secondary">Email</div>
+                        <div class="fw-bold">{{ current_user.email or 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 mb-4">
+        <!-- Detailed Info -->
+        <div class="glass-card p-4 h-100">
+            <ul class="nav nav-pills mb-4 gap-2 p-1 bg-light rounded-pill d-inline-flex border" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill px-4" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab" aria-selected="true">
+                        <i class="fas fa-id-card me-2"></i> Thông tin chi tiết
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button" role="tab" aria-selected="false">
+                        <i class="fas fa-shield-alt me-2"></i> Bảo mật
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content pt-2" id="profileTabsContent">
+                <!-- Info Tab -->
+                <div class="tab-pane fade show active" id="info" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Họ và tên</label>
+                            <input type="text" class="form-control glass-input" value="{{ current_user.fullname }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Mã nhân viên</label>
+                            <input type="text" class="form-control glass-input" value="{{ current_user.employee_code }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Tên đăng nhập</label>
+                            <input type="text" class="form-control glass-input" value="{{ current_user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Email chính thức</label>
+                            <input type="email" class="form-control glass-input" value="{{ current_user.email or '' }}" placeholder="Chưa cập nhật">
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="button" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm">
+                                <i class="fas fa-save me-2"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <h5 class="fw-800 mb-4 d-flex align-items-center">
+                            <span class="bg-primary me-2 rounded-1" style="width: 4px; height: 1.2rem;"></span>
+                            Tóm tắt Công việc
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="p-3 bg-light rounded-4 border">
+                                    <div class="text-secondary small">Ngày công tháng này</div>
+                                    <div class="h3 fw-800 mb-0">22</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="p-3 bg-light rounded-4 border">
+                                    <div class="text-secondary small">Phép năm còn lại</div>
+                                    <div class="h3 fw-800 mb-0 text-primary">{{ 12 - current_user.leave_days_used }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="security" role="tabpanel">
+                    <div class="alert alert-info rounded-4 border-0 shadow-sm mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle me-3 mt-1"></i>
+                            <div>Mật khẩu của bạn nên bao gồm ít nhất 8 ký tự, bao gồm chữ cái, chữ số và ký hiệu đặc biệt.</div>
+                        </div>
+                    </div>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Mật khẩu hiện tại</label>
+                            <input type="password" class="form-control glass-input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Mật khẩu mới</label>
+                            <input type="password" class="form-control glass-input" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Xác nhận mật khẩu mới</label>
+                            <input type="password" class="form-control glass-input" required>
+                        </div>
+                        <button type="button" class="btn btn-dark px-4 py-2 rounded-3 shadow-sm">
+                            <i class="fas fa-key me-2"></i> Đổi mật khẩu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

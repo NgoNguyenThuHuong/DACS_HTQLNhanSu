@@ -1,0 +1,336 @@
+{% extends "layout.html" %}
+{% block title %}Quản lý Tuyển dụng | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card { border-radius: 20px; border: none; transition: transform 0.2s, box-shadow 0.2s; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; }
+.stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.badge-status { font-size: 0.7rem; padding: 5px 12px; border-radius: 20px; font-weight: 600; letter-spacing: 0.03em; }
+.score-badge { font-size: 1rem; font-weight: 800; min-width: 52px; text-align: center; border-radius: 10px; padding: 4px 10px; }
+.filter-card { border-radius: 20px; border: none; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); }
+.table-card { border-radius: 24px; border: none; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); }
+.avatar-circle { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: white; flex-shrink: 0; }
+.score-bar { height: 6px; border-radius: 6px; background: #e5e7eb; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1"><i class="fas fa-user-plus me-2 text-primary"></i>Quản lý Tuyển dụng</h3>
+        <p class="text-secondary small mb-0">Theo dõi hồ sơ ứng viên, kết quả thi và xử lý tuyển dụng.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('hr.export_candidates') }}"
+           class="btn btn-outline-success rounded-pill px-3 fw-bold shadow-sm small">
+            <i class="fas fa-file-csv me-2"></i>Xuất CSV
+        </a>
+        <a href="{{ url_for('hr.manage_jobs') }}"
+           class="btn btn-outline-dark rounded-pill px-3 fw-bold shadow-sm small">
+            <i class="fas fa-briefcase me-2"></i>Quản lý Tin tuyển dụng
+        </a>
+        <a href="{{ url_for('hr.manage_exams') }}"
+           class="btn btn-outline-dark rounded-pill px-3 fw-bold shadow-sm small">
+            <i class="fas fa-file-alt me-2"></i>Quản lý Bài thi
+        </a>
+        <a href="{{ url_for('recruitment.public_portal') }}" target="_blank"
+           class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm small">
+            <i class="fas fa-external-link-alt me-2"></i>Xem Portal
+        </a>
+    </div>
+</div>
+
+<!-- Thống kê -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <div>
+                    <div class="small text-secondary">Tổng ứng viên</div>
+                    <div class="h4 fw-800 mb-0 text-dark">{{ stats.total }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                    <i class="fas fa-hourglass-half text-white"></i>
+                </div>
+                <div>
+                    <div class="small text-secondary">Đang xét duyệt</div>
+                    <div class="h4 fw-800 mb-0 text-dark">{{ stats.testing + stats.applied }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+                    <i class="fas fa-check-circle text-white"></i>
+                </div>
+                <div>
+                    <div class="small text-secondary">Đã trúng tuyển</div>
+                    <div class="h4 fw-800 mb-0 text-dark">{{ stats.passed }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+                    <i class="fas fa-times-circle text-white"></i>
+                </div>
+                <div>
+                    <div class="small text-secondary">Không đạt</div>
+                    <div class="h4 fw-800 mb-0 text-dark">{{ stats.failed }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phân tích & Biểu đồ -->
+{% if stats.total > 0 %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card filter-card shadow-sm p-4 h-100">
+            <h6 class="fw-bold text-dark mb-4 small text-uppercase" style="letter-spacing:0.05em;">Trạng thái ứng viên</h6>
+            <div style="height: 200px;">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card filter-card shadow-sm p-4 h-100">
+            <h6 class="fw-bold text-dark mb-4 small text-uppercase" style="letter-spacing:0.05em;">Phân bổ theo vị trí</h6>
+            <div style="height: 200px;">
+                <canvas id="jobChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Bộ lọc -->
+<div class="card filter-card shadow-sm p-4 mb-4">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="small fw-bold text-secondary text-uppercase mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Tìm kiếm</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-secondary small"></i></span>
+                <input type="text" name="search" value="{{ search or '' }}"
+                       class="form-control border-start-0 bg-white" placeholder="Tên hoặc email ứng viên...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label class="small fw-bold text-secondary text-uppercase mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Trạng thái</label>
+            <select name="status" class="form-select bg-white">
+                <option value="">-- Tất cả --</option>
+                <option value="Applied"  {{ 'selected' if status_filter == 'Applied' }}>📄 Mới nộp hồ sơ</option>
+                <option value="Testing"  {{ 'selected' if status_filter == 'Testing' }}>📝 Đang thi tuyển</option>
+                <option value="Passed"   {{ 'selected' if status_filter == 'Passed'  }}>✅ Đã trúng tuyển</option>
+                <option value="Failed"   {{ 'selected' if status_filter == 'Failed'  }}>❌ Không đạt</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="small fw-bold text-secondary text-uppercase mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Điểm từ</label>
+            <input type="number" name="min_score" value="{{ min_score or '' }}"
+                   min="0" max="10" step="0.1" class="form-control bg-white" placeholder="0">
+        </div>
+        <div class="col-md-2">
+            <label class="small fw-bold text-secondary text-uppercase mb-1" style="font-size:0.65rem; letter-spacing:0.05em;">Đến</label>
+            <input type="number" name="max_score" value="{{ max_score or '' }}"
+                   min="0" max="10" step="0.1" class="form-control bg-white" placeholder="10">
+        </div>
+        <div class="col-md-1 d-flex gap-2">
+            <button type="submit" class="btn btn-primary rounded-3 fw-bold px-3 w-100">
+                <i class="fas fa-filter"></i>
+            </button>
+        </div>
+        {% if search or status_filter or min_score or max_score %}
+        <div class="col-12">
+            <a href="{{ url_for('hr.recruitment_index') }}" class="btn btn-link btn-sm text-secondary p-0">
+                <i class="fas fa-times me-1"></i>Xóa bộ lọc
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Danh sách ứng viên -->
+<div class="card table-card shadow-sm">
+    <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+        <span class="fw-bold small">
+            <i class="fas fa-list me-2 text-primary"></i>
+            Danh sách ứng viên
+            {% if candidates %}
+            <span class="badge bg-primary-subtle text-primary ms-2">{{ candidates|length }}</span>
+            {% endif %}
+        </span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr style="background: rgba(248,250,252,0.5);">
+                    <th class="border-0 px-4 py-3 text-secondary small text-uppercase" style="font-size:0.65rem;">Ứng viên</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase" style="font-size:0.65rem;">Vị trí</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase" style="font-size:0.65rem;">Ngày nộp</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase text-center" style="font-size:0.65rem;">Điểm thi</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase text-center" style="font-size:0.65rem;">Trạng thái</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase text-center" style="font-size:0.65rem;">Email</th>
+                    <th class="border-0 py-3 text-secondary small text-uppercase text-center" style="font-size:0.65rem;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for can in candidates %}
+                {% set latest_result = can.results[-1] if can.results else none %}
+                <tr>
+                    <td class="px-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-circle"
+                                 style="background: linear-gradient(135deg,
+                                    {{ '#6366f1' if can.status == 'Applied' else
+                                       '#f59e0b' if can.status == 'Testing' else
+                                       '#10b981' if can.status == 'Passed' else '#ef4444' }},
+                                    {{ '#4f46e5' if can.status == 'Applied' else
+                                       '#d97706' if can.status == 'Testing' else
+                                       '#059669' if can.status == 'Passed' else '#dc2626' }});">
+                                {{ can.fullname[0]|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-bold small text-dark">{{ can.fullname }}</div>
+                                <div class="text-secondary" style="font-size:0.7rem;">{{ can.email }}</div>
+                                {% if can.phone %}
+                                <div class="text-secondary" style="font-size:0.65rem;"><i class="fas fa-phone me-1"></i>{{ can.phone }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="small text-dark">{{ can.job.title if can.job else '—' }}</td>
+                    <td class="small text-secondary">{{ can.created_at.strftime('%d/%m/%Y') }}</td>
+                    <td class="text-center">
+                        {% if latest_result %}
+                            {% set s = latest_result.score %}
+                            <div class="score-badge
+                                {% if s >= 7 %}bg-success-subtle text-success
+                                {% elif s >= 5 %}bg-warning-subtle text-warning
+                                {% else %}bg-danger-subtle text-danger{% endif %}">
+                                {{ s }}/10
+                            </div>
+                            <div class="score-bar mt-1 mx-auto" style="max-width:60px;">
+                                <div class="score-bar-fill
+                                    {% if s >= 7 %}bg-success
+                                    {% elif s >= 5 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                     style="width:{{ (s/10*100)|round }}%;"></div>
+                            </div>
+                        {% else %}
+                            <span class="text-secondary small">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge-status
+                            {% if can.status == 'Applied'  %}bg-primary-subtle text-primary
+                            {% elif can.status == 'Testing' %}bg-warning-subtle text-warning
+                            {% elif can.status == 'Passed'  %}bg-success-subtle text-success
+                            {% else %}bg-danger-subtle text-danger{% endif %}">
+                            {% if can.status == 'Applied'  %}📄 Mới nộp
+                            {% elif can.status == 'Testing' %}📝 Đang thi
+                            {% elif can.status == 'Passed'  %}✅ Trúng tuyển
+                            {% else %}❌ Không đạt{% endif %}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if can.email_sent %}
+                            <span class="badge bg-success-subtle text-success rounded-pill" style="font-size:0.65rem;">
+                                <i class="fas fa-check me-1"></i>Đã gửi
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill" style="font-size:0.65rem;">Chưa</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{{ url_for('hr.candidate_detail', can_id=can.id) }}"
+                           class="btn btn-light btn-sm rounded-pill px-3 fw-bold small border shadow-none">
+                            <i class="fas fa-eye me-1"></i>Xem
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-secondary">
+                        <i class="fas fa-inbox fa-2x mb-3 d-block opacity-30"></i>
+                        Chưa có ứng viên nào{% if search or status_filter %} phù hợp với bộ lọc{% endif %}.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if stats.total > 0 %}
+    // Biểu đồ Trạng thái
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Mới nộp', 'Đang thi', 'Trúng tuyển', ' Không đạt'],
+            datasets: [{
+                data: [{{ stats.applied }}, {{ stats.testing }}, {{ stats.passed }}, {{ stats.failed }}],
+                backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444'],
+                hoverOffset: 4,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Biểu đồ Vị trí
+    const jobCtx = document.getElementById('jobChart').getContext('2d');
+    new Chart(jobCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ stats.job_labels|tojson }},
+            datasets: [{
+                label: 'Số ứng viên',
+                data: {{ stats.job_counts|tojson }},
+                backgroundColor: '#6366f1',
+                borderRadius: 8,
+                barThickness: 30
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

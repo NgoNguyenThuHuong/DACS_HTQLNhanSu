@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+{% block title %}Quản lý Bài thi | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+.exam-card { border-radius: 20px; border: none; transition: 0.2s; }
+.exam-card:hover { transform: translateY(-3px); }
+.exam-icon { width: 44px; height: 44px; border-radius: 12px; background: #f8fafc; display: flex; align-items: center; justify-content: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1"><i class="fas fa-file-invoice me-2 text-primary"></i>Quản lý Bài thi</h3>
+        <p class="text-secondary small mb-0">Thiết lập bộ câu hỏi và ngưỡng điểm cho các kỳ thi tuyển dụng.</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addExamModal">
+        <i class="fas fa-plus me-2"></i>Tạo bài thi mới
+    </button>
+</div>
+
+<div class="row g-4">
+    {% for exam in exams %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card exam-card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="exam-icon text-primary border shadow-sm">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 leading-tight">{{ exam.title }}</h6>
+                        <span class="text-secondary" style="font-size:0.7rem;">Gồm {{ exam.questions|length }} câu hỏi</span>
+                    </div>
+                </div>
+                
+                <div class="row text-center g-0 border rounded-3 py-2 bg-light mb-4">
+                    <div class="col-6 border-end">
+                        <div class="text-muted" style="font-size:0.65rem;">THỜI GIAN</div>
+                        <div class="fw-bold small">{{ exam.duration_minutes }} phút</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size:0.65rem;">NGƯỠNG ĐẠT</div>
+                        <div class="fw-bold small">{{ exam.pass_threshold }}/10</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('hr.edit_exam', exam_id=exam.id) }}" class="btn btn-primary flex-grow-1 rounded-pill fw-bold small">
+                        <i class="fas fa-edit me-2"></i>Quản lý câu hỏi
+                    </a>
+                    <button class="btn btn-light border rounded-pill shadow-none" data-bs-toggle="modal" data-bs-target="#deleteExamModal{{ exam.id }}">
+                        <i class="fas fa-trash text-danger"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete Exam -->
+    <div class="modal fade" id="deleteExamModal{{ exam.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="modal-body p-4 text-center">
+                    <div class="text-danger mb-3"><i class="fas fa-exclamation-triangle fa-3x"></i></div>
+                    <h5 class="fw-bold">Xác nhận xóa bài thi?</h5>
+                    <p class="text-secondary small">Việc này sẽ xóa vĩnh viễn bài thi "<strong>{{ exam.title }}</strong>" và toàn bộ các câu hỏi bên trong.</p>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn btn-light flex-grow-1 rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                        <form action="{{ url_for('hr.manage_exams') }}" method="POST" class="flex-grow-1">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="exam_id" value="{{ exam.id }}">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold">Xác nhận xóa</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="opacity-25 mb-3"><i class="fas fa-file-invoice fa-4x"></i></div>
+        <h5 class="text-secondary">Chưa có bài thi nào được thiết lập.</h5>
+        <p class="text-muted small">Nhấn nút bên trên để tạo ngân hàng câu hỏi đầu tiên.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Add Exam -->
+<div class="modal fade" id="addExamModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="fw-bold mb-0">Tạo bài thi mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.manage_exams') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="action" value="add">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Tiêu đề bài thi</label>
+                        <input type="text" name="title" class="form-control" required placeholder="Ví dụ: Kiểm tra chuyên môn Python">
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">Thời gian (phút)</label>
+                            <input type="number" name="duration_minutes" value="30" class="form-control" required min="1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">Ngưỡng đạt (0-10)</label>
+                            <input type="number" name="pass_threshold" value="7.0" step="0.1" class="form-control" required min="0" max="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Tạo & Thêm câu hỏi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

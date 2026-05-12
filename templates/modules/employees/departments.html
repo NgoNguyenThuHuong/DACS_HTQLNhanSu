@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý Phòng ban | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Cấu trúc Phòng ban</h3>
+        <p class="text-secondary small">Quản lý cách các đơn vị và phòng ban được phân tầng trong hệ thống.</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#deptModal">
+        <i class="fas fa-plus me-2"></i> THÊM PHÒNG BAN MỚI
+    </button>
+</div>
+
+<div class="row g-4 mb-4">
+    {% for dept in departments %}
+    <div class="col-md-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 24px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px);">
+            <div class="d-flex align-items-center mb-3">
+                <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h5 class="fw-800 mb-0">{{ dept.name }}</h5>
+            </div>
+            <p class="text-secondary small mb-4 mt-2">{{ dept.description }}</p>
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                <div class="small fw-bold text-dark"><i class="fas fa-users me-1 opacity-50"></i> {{ dept.employees|length }} Nhân viên</div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;"><i class="fas fa-edit small text-primary"></i></button>
+                    <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;"><i class="fas fa-trash-alt small text-danger"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5 opacity-50">Chưa có phòng ban nào được tạo.</div>
+    {% endfor %}
+</div>
+
+<!-- Modal Thêm Phòng ban -->
+<div class="modal fade" id="deptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4">
+                <h5 class="fw-800 mb-0">Thêm Phòng ban mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.departments_list') }}" method="POST">
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tên phòng ban</label>
+                        <input type="text" name="name" class="form-control rounded-3" placeholder="Ví dụ: Phòng Kỹ thuật" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold">Mô tả chi tiết</label>
+                        <textarea name="description" class="form-control rounded-3" rows="3" placeholder="Mô tả chức năng & nhiệm vụ..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">LƯU THÔNG TIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

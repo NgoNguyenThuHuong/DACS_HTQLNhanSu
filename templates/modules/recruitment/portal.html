@@ -1,0 +1,192 @@
+{% extends "public_layout.html" %}
+
+{% block title %}Cổng tuyển dụng HTQLNhanSu{% endblock %}
+
+{% block content %}
+<style>
+    .hero-career {
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.9), rgba(59, 130, 246, 0.8)), url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop') center/cover;
+        color: white;
+        padding: 5rem 0;
+        border-radius: 0 0 30px 30px;
+        margin-bottom: -30px;
+    }
+    .feature-icon-box {
+        width: 64px; height: 64px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 16px; font-size: 24px;
+    }
+    .process-step {
+        position: relative;
+        text-align: center;
+        padding: 20px;
+    }
+    .process-step::after {
+        content: ''; position: absolute;
+        top: 40px; right: -50%; width: 100%; height: 2px;
+        background: rgba(0,0,0,0.1);
+    }
+    .process-step:last-child::after { display: none; }
+    .step-number {
+        width: 40px; height: 40px; margin: 0 auto 15px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--primary); color: white;
+        border-radius: 50%; font-weight: 800; font-size: 1.2rem;
+        position: relative; z-index: 2;
+    }
+    @media (max-width: 768px) {
+        .process-step::after { display: none; }
+    }
+</style>
+
+<div class="hero-career">
+    <div class="container animate-slide-up text-center">
+        <h1 class="fw-800 display-4 mb-3">Tìm công việc phù hợp với bạn</h1>
+        <p class="text-white-75 fs-5 mb-0">Khám phá cơ hội nghề nghiệp trong lĩnh vực IT cùng những dự án đầy thách thức.</p>
+    </div>
+</div>
+
+<!-- Search Pill -->
+<div class="container mb-5 position-relative" style="z-index: 10;">
+    <div class="search-pill animate-fade-in shadow-lg">
+        <div class="d-flex align-items-center flex-grow-1 px-3">
+            <i class="fas fa-search text-primary me-2"></i>
+            <input type="text" placeholder="Nhập vị trí (VD: Backend Developer...)">
+        </div>
+        <div class="divider d-none d-md-block"></div>
+        <div class="d-flex align-items-center flex-grow-1 px-3">
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            <input type="text" placeholder="Nhập địa điểm (VD: Hà Nội...)">
+        </div>
+        <button class="btn btn-primary rounded-pill px-5 py-3 ms-2 fw-bold shadow">
+            TÌM KIẾM <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-800 text-dark mb-1">Việc làm mới nhất</h3>
+            <p class="text-secondary mb-0">Nắm bắt ngay {{ jobs|length }} cơ hội việc làm nóng hổi nhất</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-4 h-100 hover-translate-y border border-transparent hover-border-primary transition-all">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center shadow-sm border" style="width: 56px; height: 56px;">
+                        <!-- Mockup Company Logo -->
+                        <i class="fas fa-building text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-800 text-dark mb-1">{{ job.title }}</h6>
+                        <p class="tiny text-secondary mb-0 fw-bold"><i class="fas fa-check-circle text-success me-1"></i> HTQLNhanSu Corp</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-secondary small line-clamp-2 mb-3">{{ job.description }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold">
+                            <i class="fas fa-laptop-house me-1"></i> Remote
+                        </span>
+                        <span class="badge bg-light text-secondary rounded-pill px-3 py-2 border">
+                            <i class="fas fa-clock me-1"></i> Full-time
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="tiny text-secondary mb-0 fw-bold uppercase">Mức lương</p>
+                        <p class="fw-800 text-dark mb-0">Thỏa thuận</p>
+                    </div>
+                    <a href="{{ url_for('recruitment.apply', job_id=job.id) }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold btn-hover-shine">
+                        Ứng tuyển ngay <i class="fas fa-bolt text-warning ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="text-secondary opacity-50 mb-3"><i class="fas fa-folder-open fa-3x"></i></div>
+            <h5 class="fw-bold">Chưa có vị trí tuyển dụng nào</h5>
+            <p>Vui lòng quay lại sau.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Section: Theo sao chọn chúng tôi? -->
+<div class="bg-light py-5 mt-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="fw-800 text-dark mb-2">Vì sao chọn chúng tôi?</h3>
+            <p class="text-secondary">Chế độ đãi ngộ và môi trường làm việc lý tưởng.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="glass-card p-4 h-100">
+                    <div class="feature-icon-box bg-success-light text-success mx-auto mb-3">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Lương thưởng cạnh tranh</h5>
+                    <p class="text-secondary small mb-0">Mức lương hấp dẫn theo năng lực, thưởng dự án, thưởng tháng 13 và review tăng lương định kỳ 2 lần/năm.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="glass-card p-4 h-100">
+                    <div class="feature-icon-box bg-primary-light text-primary mx-auto mb-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Văn hóa cởi mở</h5>
+                    <p class="text-secondary small mb-0">Môi trường làm việc năng động, trẻ trung. Trân trọng ý kiến cá nhân và khuyến khích sự đổi mới.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="glass-card p-4 h-100">
+                    <div class="feature-icon-box bg-warning-light text-warning mx-auto mb-3">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Phát triển bản thân</h5>
+                    <p class="text-secondary small mb-0">Cơ hội tham gia các khóa đào tạo chuyên sâu, định hướng lộ trình thăng tiến rõ ràng cho từng cá nhân.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section: Quy trình Tuyển dụng -->
+<div class="container py-5 my-5">
+    <div class="text-center mb-5">
+        <h3 class="fw-800 text-dark mb-2">Quy trình Tuyển dụng</h3>
+        <p class="text-secondary">Chỉ 4 bước đơn giản để trở thành một phần của chúng tôi.</p>
+    </div>
+    
+    <div class="row g-0">
+        <div class="col-md-3 process-step animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="step-number">1</div>
+            <h6 class="fw-bold text-dark mb-2">Nộp Hồ Sơ</h6>
+            <p class="small text-secondary px-2">Tìm kiếm vị trí phù hợp và gửi cho chúng tôi CV mới nhất của bạn (Online).</p>
+        </div>
+        <div class="col-md-3 process-step animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="step-number">2</div>
+            <h6 class="fw-bold text-dark mb-2">Test Năng Lực</h6>
+            <p class="small text-secondary px-2">Hoàn thành bài kiểm tra trắc nghiệm & tự luận online ngay trên hệ thống.</p>
+        </div>
+        <div class="col-md-3 process-step animate-slide-up" style="animation-delay: 0.3s;">
+            <div class="step-number">3</div>
+            <h6 class="fw-bold text-dark mb-2">Kiểm Tra Hồ Sơ</h6>
+            <p class="small text-secondary px-2">Nhân sự (HR) sẽ đánh giá tự động dựa trên điểm số và đọc Feedback bài tự luận.</p>
+        </div>
+        <div class="col-md-3 process-step animate-slide-up" style="animation-delay: 0.4s;">
+            <div class="step-number">4</div>
+            <h6 class="fw-bold text-dark mb-2">Phỏng Vấn & Offer</h6>
+            <p class="small text-secondary px-2">Gặp mặt trực tiếp, thảo luận mức lương và gửi thư mời làm việc chính thức.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

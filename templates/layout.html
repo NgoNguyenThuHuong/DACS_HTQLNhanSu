@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hệ thống Quản lý Nhân sự Thông minh{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Fix Sidebar Scroll & Zoom Layout */
+        .sidebar-menu-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+        /* Custom scrollbar for sidebar */
+        .sidebar-menu-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar-menu-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-menu-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .sidebar-menu-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.2);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="role-{{ current_user.role|lower if current_user.is_authenticated else 'guest' }}">
+    <!-- Premium UI: Background Blobs -->
+    <div class="bg-blob" style="top: -100px; left: -100px;"></div>
+    <div class="bg-blob" style="bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, rgba(255, 255, 255, 0) 70%);"></div>
+
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="container-fluid p-0">
+        <div class="d-flex">
+            <!-- Sidebar -->
+            {% if current_user.is_authenticated %}
+            <nav id="sidebar" class="d-flex flex-column">
+                <div class="sidebar-brand mb-4">
+                    <div class="d-flex align-items-center px-3">
+                        <div class="{{ 'bg-dark' if current_user.role == 'Admin' else 'bg-primary' }} rounded-3 p-2 me-2 shadow-sm">
+                            <i class="fas {{ 'fa-shield-halved' if current_user.role == 'Admin' else 'fa-star' }} text-white"></i>
+                        </div>
+                        <h4 class="mb-0 fw-800" style="font-size: 0.82rem; line-height: 1.2; white-space: nowrap;">Hệ thống Quản lý<br>Nhân sự Thông minh</h4>
+                    </div>
+                </div>
+                
+                <!-- Khu vực menu có thể cuộn độc lập -->
+                <div class="sidebar-menu-scroll">
+                    <div class="px-3 mb-2 text-uppercase text-secondary fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Cá nhân</div>
+                <ul class="nav flex-column mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">
+                            <i class="fas fa-th-large me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'main.profile' else '' }}" href="{{ url_for('main.profile') }}">
+                            <i class="fas fa-user-circle me-2"></i> Hồ sơ của tôi
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'attendance.index' else '' }}" href="{{ url_for('attendance.index') }}">
+                            <i class="fas fa-fingerprint me-2"></i> Chấm công
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'employee.leave_index' else '' }}" href="{{ url_for('employee.leave_index') }}">
+                            <i class="fas fa-calendar-alt me-2"></i> Nghỉ phép
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'employee.tasks_index' else '' }}" href="{{ url_for('employee.tasks_index') }}">
+                            <i class="fas fa-tasks me-2"></i> Nhiệm vụ
+                        </a>
+                    </li>
+                </ul>
+
+                {% if current_user.role in ['Admin', 'HR'] %}
+                <div class="px-3 mb-2 text-uppercase text-secondary fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Quản trị hệ thống</div>
+                <ul class="nav flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.employees_list' else '' }}" href="{{ url_for('hr.employees_list') }}">
+                            <i class="fas fa-users-cog me-2"></i> Nhân sự
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.departments_list' else '' }}" href="{{ url_for('hr.departments_list') }}">
+                            <i class="fas fa-database me-2"></i> Phòng ban
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if 'recruitment' in request.endpoint else '' }}" href="{{ url_for('hr.recruitment_index') }}">
+                            <i class="fas fa-users-viewfinder me-2"></i> QL Tuyển dụng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.manage_tasks' else '' }}" href="{{ url_for('hr.manage_tasks') }}">
+                            <i class="fas fa-tasks me-2"></i> Giao nhiệm vụ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.manage_leave' else '' }}" href="{{ url_for('hr.manage_leave') }}">
+                            <i class="fas fa-calendar-check me-2"></i> Duyệt nghỉ phép
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.attendance_logs' else '' }}" href="{{ url_for('hr.attendance_logs') }}">
+                            <i class="fas fa-clipboard-list me-2"></i> Nhật ký chấm công
+                        </a>
+                    </li>
+                    {% if current_user.role == 'Admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint in ['hr.manage_accounts', 'hr.user_permissions'] else '' }}" href="{{ url_for('hr.manage_accounts') }}">
+                            <i class="fas fa-shield-halved me-2"></i> Tài khoản & Quyền
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active shadow-sm' if request.endpoint == 'hr.reports_index' else '' }}" href="{{ url_for('hr.reports_index') }}">
+                            <i class="fas fa-chart-line me-2"></i> Báo cáo tổng
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+                </div> <!-- End of scrollable menu -->
+
+                <!-- Nút đăng xuất ghim cứng ở đáy -->
+                <div class="mt-auto pt-4 pb-3 border-top sticky-bottom header-fallback-bg" style="z-index: 10;">
+                    <div class="d-flex align-items-center px-3 mb-4">
+                        {% if current_user.avatar and current_user.avatar != 'default_avatar.png' %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}" width="45" height="45" class="rounded-circle me-3 border border-2 border-white shadow-sm" style="object-fit: cover;">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ current_user.fullname|urlencode }}&background=6366f1&color=fff" width="45" height="45" class="rounded-circle me-3 border border-2 border-white shadow-sm">
+                        {% endif %}
+                        <div class="overflow-hidden">
+                            <div class="fw-bold text-dark text-truncate small">{{ current_user.fullname }}</div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge {{ 'bg-dark' if current_user.role == 'Admin' else 'bg-primary-subtle text-primary' }} border-0" style="font-size: 0.55rem; padding: 2px 6px;">{{ current_user.role|upper }}</span>
+                                <div class="text-secondary" style="font-size: 0.6rem;">• ID: {{ current_user.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="nav-link text-secondary bg-light mx-2 mb-2 border rounded-3 py-2 justify-content-center" href="{{ url_for('auth.logout') }}">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </nav>
+            {% endif %}
+
+            <div class="main-wrapper flex-grow-1">
+                {% if current_user.is_authenticated %}
+                <nav class="navbar border-bottom px-4" style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);">
+                    <div class="container-fluid">
+                        <button class="navbar-toggler d-lg-none" type="button" id="sidebarToggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div class="ms-auto d-flex align-items-center">
+                            <div class="text-end border-start ps-3">
+                                <div id="live-date" class="small fw-bold text-dark lh-1">--</div>
+                                <div id="live-clock" class="text-secondary" style="font-size: 0.6rem;">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                {% endif %}
+
+                <div class="p-4 bg-light min-vh-100">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% if current_user.is_authenticated %}
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const dayName = days[now.getDay()];
+            const dateStr = now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            document.getElementById('live-date').innerText = dayName + ', ' + dateStr;
+            document.getElementById('live-clock').innerText = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('sidebarToggle');
+
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                sidebar.classList.add('show');
+                overlay.classList.add('show');
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            });
+        }
+    </script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

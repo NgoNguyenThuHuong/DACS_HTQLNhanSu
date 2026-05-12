@@ -1,0 +1,64 @@
+{% extends "public_layout.html" %}
+{% block title %}Kết quả bài thi | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.result-card { animation: fadeUp 0.5s ease both; border-radius: 24px; border: none; }
+.score-ring { width:140px; height:140px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; border:8px solid; margin: 0 auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5 bg-light">
+    <div class="glass-card p-5 text-center animate-slide-up" style="max-width: 560px; width: 100%;">
+        <!-- Success Icon -->
+        <div class="mb-4">
+            <div class="rounded-circle bg-success shadow-sm d-flex align-items-center justify-content-center mx-auto pulse-animation" style="width: 80px; height: 80px;">
+                <i class="fas fa-check text-white fa-2x"></i>
+            </div>
+        </div>
+
+        <h2 class="fw-800 text-dark mb-2">Gửi thành công!</h2>
+        <p class="text-secondary mb-5">Hồ sơ ứng tuyển của bạn đã được ghi nhận vào hệ thống. Cảm ơn bạn đã quan tâm đến công ty chúng tôi.</p>
+
+        <!-- Status Timeline -->
+        <div class="status-timeline text-start mb-5">
+            <div class="status-step completed">
+                <h6 class="fw-800 text-dark mb-1">Nộp hồ sơ</h6>
+                <p class="tiny text-secondary mb-0">Hồ sơ đã được gửi thành công lúc {{ candidate.created_at or 'Vừa xong' }}</p>
+            </div>
+            <div class="status-step active">
+                <h6 class="fw-800 text-dark mb-1">Đang duyệt</h6>
+                <p class="tiny text-secondary mb-0">Bộ phận Nhân sự đang xem xét kết quả bài thi của bạn</p>
+            </div>
+            <div class="status-step">
+                <h6 class="fw-800 text-dark mb-1">Phỏng vấn</h6>
+                <p class="tiny text-secondary mb-0">Bạn sẽ nhận được lời mời nếu hồ sơ phù hợp</p>
+            </div>
+        </div>
+
+        <!-- Result Summary -->
+        <div class="bg-light rounded-4 p-4 mb-5 text-start">
+            <h6 class="fw-800 text-dark mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>Kết quả sơ bộ:</h6>
+            <div class="row g-3">
+                <div class="col-6">
+                    <p class="tiny text-secondary mb-0 uppercase fw-bold">Trắc nghiệm</p>
+                    <p class="h5 fw-800 text-dark mb-0">{{ score_correct }}/{{ total_mcq }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="tiny text-secondary mb-0 uppercase fw-bold">Điểm số</p>
+                    <p class="h5 fw-800 {{ 'text-success' if passed else 'text-warning' }} mb-0">{{ score }}/10</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-3">
+            <a href="{{ url_for('recruitment.public_portal') }}" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm">
+                TRỞ LẠI DANH SÁCH VIỆC LÀM
+            </a>
+            <p class="tiny text-secondary">Mọi thắc mắc vui lòng liên hệ hr@htqlnhansu.com</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

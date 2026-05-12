@@ -1,0 +1,96 @@
+{% extends "public_layout.html" %}
+
+{% block title %}Nộp hồ sơ | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-slide-up">
+    <div class="col-md-9 col-lg-7">
+        <div class="glass-card border-0 p-4 p-md-5 mb-5 overflow-hidden position-relative">
+            <!-- Decorative accent -->
+            <div class="position-absolute top-0 start-0 w-100 h-2 bg-gradient-primary opacity-75"></div>
+
+            <div class="text-center mb-5 mt-3">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary-light text-primary rounded-circle mb-3 shadow-sm" style="width: 64px; height: 64px;">
+                    <i class="fas fa-file-signature fa-2x"></i>
+                </div>
+                <h3 class="fw-800 text-dark mb-2">Thông tin Ứng tuyển</h3>
+                <div class="d-inline-block px-3 py-1 bg-primary-light text-primary rounded-pill fw-bold small mb-2">{{ job.title }}</div>
+                <p class="text-secondary small">Vui lòng điền thông tin chính xác để bộ phận nhân sự liên hệ với bạn.</p>
+            </div>
+
+            <form action="{{ url_for('recruitment.apply', job_id=job.id) }}" method="POST" enctype="multipart/form-data" class="row g-4">
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-secondary letter-spacing-1 mb-2">Họ và tên đầy đủ</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-4 px-3 text-secondary">
+                            <i class="fas fa-user-tie"></i>
+                        </span>
+                        <input type="text" name="fullname" class="form-control glass-input rounded-end-4" placeholder="Nhập tên của bạn..." required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-secondary letter-spacing-1 mb-2">Địa chỉ Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-4 px-3 text-secondary">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input type="email" name="email" class="form-control glass-input rounded-end-4" placeholder="email@gmail.com" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-secondary letter-spacing-1 mb-2">Số điện thoại</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-4 px-3 text-secondary">
+                            <i class="fas fa-phone"></i>
+                        </span>
+                        <input type="tel" name="phone" class="form-control glass-input rounded-end-4" placeholder="0901 234 567" required>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-secondary letter-spacing-1 mb-2">Hồ sơ năng lực (CV)</label>
+                    <div class="upload-zone p-5 text-center position-relative" id="cvDropZone">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                        <h6 class="fw-bold text-dark mb-1">Click hoặc kéo thả file vào đây</h6>
+                        <p class="small text-secondary mb-3">Hỗ trợ định dạng: .pdf, .docx (Tối đa 5MB)</p>
+                        
+                        <input type="file" name="cv" id="cvInput" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" required onchange="updateFileName(this)">
+                        
+                        <div id="fileInfo" class="mt-3 p-2 bg-white rounded-3 shadow-sm d-none animate-slide-up">
+                            <span class="text-primary fw-bold small" id="fileNameText"></span>
+                            <i class="fas fa-check-circle text-success ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-5">
+                    <button type="submit" class="btn btn-primary d-block w-100 rounded-pill fw-bold py-3 shadow-lg hover-scale">
+                        GỬI HỒ SƠ & TIẾP TỤC LÀM BÀI TEST <i class="fas fa-arrow-right ms-2 pulse-animation"></i>
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('recruitment.public_portal') }}" class="text-secondary text-decoration-none small fw-bold hover-translate-y d-inline-block">
+                             <i class="fas fa-chevron-left me-1"></i> Quay lại danh sách công việc
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateFileName(input) {
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameText = document.getElementById('fileNameText');
+        if (input.files && input.files[0]) {
+            fileNameText.textContent = 'Đã chọn: ' + input.files[0].name;
+            fileInfo.classList.remove('d-none');
+        } else {
+            fileInfo.classList.add('d-none');
+        }
+    }
+</script>
+{% endblock %}
+

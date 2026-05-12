@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý nghỉ phép | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Quản lý Nghỉ phép</h3>
+        <p class="text-secondary small">Theo dõi hạn mức và gửi yêu cầu nghỉ phép trực tuyến.</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#leaveModal">
+        <i class="fas fa-plus me-2"></i> TẠO YÊU CẦU MỚI
+    </button>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 24px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+            <div class="small fw-bold opacity-75 mb-1 text-uppercase">Tổng hạn mức</div>
+            <div class="h2 fw-800 mb-0">{{ current_user.leave_days_quota }} ngày</div>
+            <div class="mt-3 small opacity-50 font-monospace">Năm 2024</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 24px;">
+            <div class="small fw-bold text-secondary mb-1 text-uppercase">Đã sử dụng</div>
+            <div class="h2 fw-800 mb-0 text-danger">{{ current_user.leave_days_used }} ngày</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 24px;">
+            <div class="small fw-bold text-secondary mb-1 text-uppercase">Còn lại</div>
+            <div class="h2 fw-800 mb-0 text-success">{{ current_user.leave_days_quota - current_user.leave_days_used }} ngày</div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4" style="border-radius: 30px;">
+    <h5 class="fw-800 mb-4">Lịch sử Yêu cầu</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="border-0">Loại nghỉ</th>
+                    <th class="border-0">Thời gian</th>
+                    <th class="border-0">Lý do</th>
+                    <th class="border-0 text-center">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td class="py-3">
+                        <div class="fw-bold small">{{ req.leave_type }}</div>
+                        <div class="text-secondary small" style="font-size: 0.7rem;">Ngày tạo: {{ req.created_at.strftime('%d/%m/%Y') }}</div>
+                    </td>
+                    <td class="small">{{ req.start_date.strftime('%d/%m/%Y') }} - {{ req.end_date.strftime('%d/%m/%Y') }}</td>
+                    <td class="small text-secondary">{{ req.reason }}</td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill px-3 py-2 border-0 
+                            {{ 'bg-warning-subtle text-warning' if req.status == 'Pending' else 
+                               ('bg-success-subtle text-success' if req.status == 'Approved' else 'bg-danger-subtle text-danger') }}">
+                            {{ req.status|upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 opacity-50">Chưa có yêu cầu nào được ghi nhận.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Tạo yêu cầu -->
+<div class="modal fade" id="leaveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4">
+                <h5 class="fw-800 mb-0">Tạo yêu cầu Nghỉ phép</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('employee.leave_index') }}" method="POST">
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Loại nghỉ phép</label>
+                        <select name="leave_type" class="form-select rounded-3">
+                            <option>Nghỉ phép năm</option>
+                            <option>Nghỉ ốm</option>
+                            <option>Nghỉ việc riêng</option>
+                        </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Từ ngày</label>
+                            <input type="date" name="start_date" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Đến ngày</label>
+                            <input type="date" name="end_date" class="form-control rounded-3" required>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold">Lý do nghỉ</label>
+                        <textarea name="reason" class="form-control rounded-3" rows="3" placeholder="Nhập lý do chi tiết..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">GỬI YÊU CẦU NGAY</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}Báo cáo Tổng hợp - HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="row fade-in mb-4">
+    <div class="col-12">
+        <div class="card border-0 p-4 shadow-sm d-flex flex-row justify-content-between align-items-center" style="border-radius: 20px; background: #fff;">
+            <div>
+                <h2 class="fw-800 mb-1 text-dark">Báo cáo Tổng hợp</h2>
+                <p class="text-secondary mb-0 small">Phân tích chuyên sâu dựa trên dữ liệu thực tế từ hệ thống.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm tiny fw-bold">
+                    <i class="fas fa-file-pdf me-2 text-danger"></i> Xuất PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Stats Cards -->
+    <div class="col-md-3">
+        <div class="card border-0 p-4 text-center border-bottom border-primary border-4 shadow-sm" style="border-radius: 16px;">
+            <div class="text-secondary small text-uppercase fw-bold mb-2" style="font-size: 0.6rem;">Tỷ lệ Chuyên cần</div>
+            <div class="h2 fw-800 text-primary mb-0">{{ attendance_rate }}%</div>
+            <div class="text-muted small mt-1" style="font-size: 0.65rem;">Chấm công hôm nay</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 p-4 text-center border-bottom border-success border-4 shadow-sm" style="border-radius: 16px;">
+            <div class="text-secondary small text-uppercase fw-bold mb-2" style="font-size: 0.6rem;">Nghỉ phép TB</div>
+            <div class="h2 fw-800 text-success mb-0">{{ avg_leave }}</div>
+            <div class="text-muted small mt-1" style="font-size: 0.65rem;">Ngày / Nhân viên</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 p-4 text-center border-bottom border-info border-4 shadow-sm" style="border-radius: 16px;">
+            <div class="text-secondary small text-uppercase fw-bold mb-2">Nhân viên Mới</div>
+            <div class="h2 fw-800 text-info mb-0">{{ new_emps }}</div>
+            <div class="text-muted small mt-1" style="font-size: 0.65rem;">Trong 30 ngày qua</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 p-4 text-center border-bottom border-warning border-4 shadow-sm" style="border-radius: 16px;">
+            <div class="text-secondary small text-uppercase fw-bold mb-2">Điểm thi Tuyển dụng</div>
+            <div class="h2 fw-800 text-warning mb-0">{{ avg_score }}</div>
+            <div class="text-muted small mt-1" style="font-size: 0.65rem;">Trung bình MCQ</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 16px;">
+            <h6 class="fw-bold text-secondary mb-4 text-uppercase small"><i class="fas fa-chart-line me-2 text-primary"></i>Xu hướng Chấm công & Tải trọng</h6>
+            <div style="height: 350px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 16px;">
+            <h6 class="fw-bold text-secondary mb-4 text-uppercase small"><i class="fas fa-filter me-2 text-info"></i>Phễu Tuyển dụng</h6>
+            <div style="height: 300px;">
+                <canvas id="recruitmentChart"></canvas>
+            </div>
+            <div class="mt-4 text-center">
+                <div class="small text-secondary">Tổng số ứng viên: <strong>{{ recruitment_data[0] }}</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card border-0 p-4 shadow-sm" style="border-radius: 16px;">
+            <h6 class="fw-bold text-secondary mb-4 text-uppercase small"><i class="fas fa-chart-pie me-2 text-success"></i>Cơ cấu Phòng ban</h6>
+            <div style="height: 300px;">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 16px;">
+            <h6 class="fw-bold text-secondary mb-4 text-uppercase small"><i class="fas fa-history me-2 text-warning"></i>Nhật ký Hệ thống</h6>
+            <div class="activity-feed">
+                {% if recent_activities %}
+                    {% for act in recent_activities %}
+                    <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-light">
+                        <div class="bg-{{ act.color }}-subtle text-{{ act.color }} p-2 rounded-2 me-3" style="width: 35px; height: 35px; text-align: center;">
+                            <i class="fas {{ act.icon }} small"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small"><strong>{{ act.user }}</strong> {{ act.action }}</div>
+                            <div class="tiny text-muted">{{ act.time.strftime('%d/%m/%Y %H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted py-5 small">Chưa có dữ liệu hoạt động.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Dept Chart
+        new Chart(document.getElementById('deptChart'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ dept_labels|tojson }},
+                datasets: [{
+                    data: {{ dept_counts|tojson }},
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // 2. Trend Chart
+        const trendData = {{ attendance_trend|tojson }};
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: trendData.map(d => d.date),
+                datasets: [{
+                    label: 'Số người chấm công',
+                    data: trendData.map(d => d.count),
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 3. Recruitment Chart
+        new Chart(document.getElementById('recruitmentChart'), {
+            type: 'polarArea',
+            data: {
+                labels: ['Tổng', 'Đạt', 'Loại'],
+                datasets: [{
+                    data: {{ recruitment_data|tojson }},
+                    backgroundColor: ['rgba(99, 102, 241, 0.5)', 'rgba(16, 185, 129, 0.5)', 'rgba(239, 68, 68, 0.5)']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    });
+</script>
+{% endblock %}

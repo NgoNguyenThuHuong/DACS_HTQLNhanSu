@@ -1,0 +1,136 @@
+{% extends "layout.html" %}
+
+{% block title %}Danh sách Nhân viên | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Quản lý Nhân viên</h3>
+        <p class="text-secondary small">Theo dõi và quản lý thông tin đội ngũ nhân sự của bạn.</p>
+    </div>
+    <button class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#employeeModal">
+        <i class="fas fa-user-plus me-2"></i> THÊM NHÂN VIÊN MỚI
+    </button>
+</div>
+
+<div class="card border-0 shadow-sm p-4" style="border-radius: 30px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="border-0 text-secondary small text-uppercase">Mã NV</th>
+                    <th class="border-0 text-secondary small text-uppercase">Họ và tên</th>
+                    <th class="border-0 text-secondary small text-uppercase">Phòng ban</th>
+                    <th class="border-0 text-secondary small text-uppercase">Vị trí</th>
+                    <th class="border-0 text-secondary small text-uppercase">Vai trò</th>
+                    <th class="border-0 text-secondary small text-uppercase text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td class="fw-bold text-primary py-3">{{ emp.employee_code }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="https://ui-avatars.com/api/?name={{ emp.fullname|urlencode }}&background=6366f1&color=fff" width="35" height="35" class="rounded-circle me-3">
+                            <div>
+                                <div class="fw-bold small">{{ emp.fullname }}</div>
+                                <div class="text-secondary" style="font-size: 0.7rem;">{{ emp.email or 'N/A' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="small">{{ emp.department.name if emp.department else 'N/A' }}</td>
+                    <td class="small">{{ emp.position or 'N/A' }}</td>
+                    <td>
+                        <span class="badge rounded-pill px-3 py-1 border-0 
+                            {{ 'bg-dark' if emp.role == 'Admin' else ('bg-info-subtle text-info' if emp.role == 'HR' else 'bg-secondary-subtle text-secondary') }}">
+                            {{ emp.role|upper }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 30px; height: 30px;" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v small"></i>
+                            </button>
+                            <ul class="dropdown-menu border-0 shadow-lg" style="border-radius: 12px;">
+                                <li><a class="dropdown-item small py-2" href="#"><i class="fas fa-edit me-2 text-primary"></i> Sửa</a></li>
+                                {% if current_user.role == 'Admin' %}
+                                <li>
+                                    <form action="{{ url_for('hr.reset_password', emp_id=emp.id) }}" method="POST" onsubmit="return confirm('Reset mật khẩu về 123456?')" class="d-inline">
+                                        <button type="submit" class="dropdown-item small py-2 text-warning"><i class="fas fa-key me-2"></i> Reset mật khẩu</button>
+                                    </form>
+                                </li>
+                                <li><a class="dropdown-item small py-2 text-info" href="{{ url_for('hr.user_permissions', emp_id=emp.id) }}"><i class="fas fa-shield-halved me-2"></i> Phân quyền</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item small py-2 text-danger" href="#"><i class="fas fa-trash-alt me-2"></i> Xóa</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 opacity-50">Không có nhân viên nào trong danh sách.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Thêm Nhân viên -->
+<div class="modal fade" id="employeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-800 mb-0">Thêm Nhân viên mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.employees_list') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Mã nhân viên</label>
+                            <input type="text" name="employee_code" class="form-control rounded-3" placeholder="NV00x" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tên đăng nhập</label>
+                            <input type="text" name="username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Họ và tên</label>
+                            <input type="text" name="fullname" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Mật khẩu ban đầu</label>
+                            <input type="password" name="password" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Phòng ban</label>
+                            <select name="department_id" class="form-select rounded-3">
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Vai trò hệ thống</label>
+                            <select name="role" class="form-select rounded-3">
+                                <option value="Employee">Nhân viên</option>
+                                <option value="HR">Quản trị HR</option>
+                                <option value="Admin">Quản trị viên (Admin)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">LƯU THÔNG TIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

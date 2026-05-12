@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+{% block title %}Quản lý Tin Tuyển dụng | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+.job-card { border-radius: 20px; border: none; transition: all 0.3s; }
+.job-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.badge-status { font-size: 0.75rem; padding: 6px 15px; border-radius: 20px; }
+.btn-action { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1"><i class="fas fa-briefcase me-2 text-primary"></i>Quản lý Tin Tuyển dụng</h3>
+        <p class="text-secondary small mb-0">Tạo và điều chỉnh các vị trí đang tuyển dụng của công ty.</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addJobModal">
+        <i class="fas fa-plus me-2"></i>Thêm vị trí mới
+    </button>
+</div>
+
+<div class="row g-4">
+    {% for job in jobs %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card job-card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge-status {% if job.status == 'Open' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                        {% if job.status == 'Open' %}🟢 Đang mở{% else %}⚪ Đã đóng{% endif %}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-secondary p-0" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#editJobModal{{ job.id }}"><i class="fas fa-edit me-2"></i>Chỉnh sửa</a></li>
+                            <li>
+                                <form action="{{ url_for('hr.manage_jobs') }}" method="POST">
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="job_id" value="{{ job.id }}">
+                                    <button type="submit" class="dropdown-item py-2 text-{{ 'danger' if job.status == 'Open' else 'success' }}">
+                                        <i class="fas fa-toggle-{{ 'on' if job.status == 'Open' else 'off' }} me-2"></i>
+                                        {{ 'Đóng tuyển dụng' if job.status == 'Open' else 'Mở tuyển dụng' }}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">{{ job.title }}</h5>
+                <div class="text-secondary small mb-3" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6;">
+                    {{ job.description }}
+                </div>
+                <hr class="opacity-10">
+                <div class="d-flex align-items-center justify-content-between mt-auto">
+                    <div class="small text-secondary">
+                        <i class="fas fa-users me-1"></i> {{ job.candidates|length }} ứng viên
+                    </div>
+                    <div class="small text-secondary">
+                        <i class="fas fa-calendar-alt me-1"></i> {{ job.created_at.strftime('%d/%m/%Y') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Job -->
+    <div class="modal fade" id="editJobModal{{ job.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+                <div class="modal-header border-0 px-4 pt-4">
+                    <h5 class="fw-bold mb-0">Chỉnh sửa tin tuyển dụng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('hr.manage_jobs') }}" method="POST">
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Tiêu đề vị trí</label>
+                            <input type="text" name="title" value="{{ job.title }}" class="form-control" required placeholder="Ví dụ: Nhân viên Marketing (Senior)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Mô tả công việc</label>
+                            <textarea name="description" class="form-control" rows="5" required placeholder="Mô tả các nhiệm vụ chính...">{{ job.description }}</textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold text-secondary">Yêu cầu ứng viên</label>
+                            <textarea name="requirements" class="form-control" rows="5" placeholder="Các kỹ năng, kinh nghiệm cần thiết...">{{ job.requirements }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="opacity-25 mb-3"><i class="fas fa-briefcase fa-4x"></i></div>
+        <h5 class="text-secondary">Chưa có tin tuyển dụng nào.</h5>
+        <p class="text-muted small">Hãy nhấn "Thêm vị trí mới" để bắt đầu.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Add Job -->
+<div class="modal fade" id="addJobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="fw-bold mb-0">Thêm tin tuyển dụng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.manage_jobs') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="action" value="add">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Tiêu đề vị trí</label>
+                        <input type="text" name="title" class="form-control" required placeholder="Ví dụ: Lập trình viên Python">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Mô tả công việc</label>
+                        <textarea name="description" class="form-control" rows="5" required placeholder="Mô tả các nhiệm vụ chính..."></textarea>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-secondary">Yêu cầu ứng viên</label>
+                        <textarea name="requirements" class="form-control" rows="5" placeholder="Các kỹ năng, kinh nghiệm cần thiết..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Đăng tin ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

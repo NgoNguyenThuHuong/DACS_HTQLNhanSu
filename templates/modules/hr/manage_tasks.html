@@ -1,0 +1,356 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý Nhiệm vụ Cao cấp - HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h2 class="fw-800 text-dark mb-1">Quản lý Nhiệm vụ</h2>
+        <p class="text-secondary small mb-0">Hệ thống phân công và giám sát công việc chuyên sâu.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm" onclick="window.location.reload()">
+            <i class="fas fa-sync-alt"></i> Làm mới
+        </button>
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="fas fa-plus-circle me-2"></i> Giao nhiệm vụ mới
+        </button>
+    </div>
+</div>
+
+<!-- Thống kê nhanh -->
+<div class="row g-4 mb-4 fade-in">
+    <div class="col-md-3">
+        <div class="glass-card p-3 border-start border-4 border-primary shadow-sm">
+            <div class="text-secondary small fw-bold">Tổng nhiệm vụ</div>
+            <div class="h3 fw-800 mb-0">{{ tasks|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-3 border-start border-4 border-warning shadow-sm">
+            <div class="text-secondary small fw-bold">Chờ xử lý</div>
+            <div class="h3 fw-800 mb-0 text-warning">{{ tasks|selectattr('status', 'equalto', 'Pending')|list|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-3 border-start border-4 border-info shadow-sm">
+            <div class="text-secondary small fw-bold">Đang làm</div>
+            <div class="h3 fw-800 mb-0 text-info">{{ tasks|selectattr('status', 'equalto', 'In_Progress')|list|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-3 border-start border-4 border-success shadow-sm">
+            <div class="text-secondary small fw-bold">Hoàn thành</div>
+            <div class="h3 fw-800 mb-0 text-success">{{ tasks|selectattr('status', 'equalto', 'Completed')|list|length }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ lọc Nâng cao -->
+<div class="glass-card p-4 mb-4 fade-in shadow-sm">
+    <form class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-secondary">Tìm kiếm</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" name="search" class="form-control border-start-0" placeholder="Tên NV, nhiệm vụ..." value="{{ search }}">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-bold text-secondary">Trạng thái</label>
+            <select name="status" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Chờ xử lý</option>
+                <option value="In_Progress" {{ 'selected' if status_filter == 'In_Progress' }}>Đang làm</option>
+                <option value="Completed" {{ 'selected' if status_filter == 'Completed' }}>Hoàn thành</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-bold text-secondary">Ưu tiên</label>
+            <select name="priority" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="High" {{ 'selected' if priority_filter == 'High' }}>Cao</option>
+                <option value="Medium" {{ 'selected' if priority_filter == 'Medium' }}>Trung bình</option>
+                <option value="Low" {{ 'selected' if priority_filter == 'Low' }}>Thấp</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-bold text-secondary">Danh mục</label>
+            <select name="category" class="form-select">
+                <option value="">Tất cả</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {{ 'selected' if category_filter == cat }}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-dark w-100 rounded-3">Áp dụng</button>
+            <a href="{{ url_for('hr.manage_tasks') }}" class="btn btn-light border w-50 rounded-3">Xóa lọc</a>
+        </div>
+    </form>
+</div>
+
+<!-- Danh sách nhiệm vụ -->
+<div class="glass-card fade-in shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4" style="width: 250px;">Nhân viên</th>
+                    <th>Nhiệm vụ & Mô tả</th>
+                    <th style="width: 120px;">Hạn chót</th>
+                    <th style="width: 120px;">Ưu tiên</th>
+                    <th style="width: 150px;">Trạng thái</th>
+                    <th class="text-end pe-4" style="width: 100px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <img src="https://ui-avatars.com/api/?name={{ task.employee.fullname|urlencode }}&background=6366f1&color=fff" class="rounded-circle me-3 border shadow-sm" width="40" height="40">
+                            <div>
+                                <div class="fw-bold text-dark">{{ task.employee.fullname }}</div>
+                                <div class="small text-secondary">{{ task.employee.employee_code }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="badge bg-primary-subtle text-primary border-0 me-2" style="font-size: 0.65rem;">{{ task.category }}</span>
+                            <div class="fw-bold text-dark">{{ task.title }}</div>
+                        </div>
+                        <div class="small text-secondary text-truncate" style="max-width: 400px;" title="{{ task.description }}">
+                            {{ task.description or 'Không có mô tả chi tiết.' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small fw-bold {{ 'text-danger' if task.due_date and task.due_date < now else '' }}">
+                            {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'N/A' }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if task.priority == 'High' %}
+                            <span class="badge bg-danger-subtle text-danger border-0 w-100">Cao</span>
+                        {% elif task.priority == 'Medium' %}
+                            <span class="badge bg-warning-subtle text-warning border-0 w-100">Trung bình</span>
+                        {% else %}
+                            <span class="badge bg-info-subtle text-info border-0 w-100">Thấp</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.status == 'Pending' %}
+                            <span class="badge bg-secondary-subtle text-secondary border-0 w-100">
+                                <i class="fas fa-clock me-1"></i> Chờ xử lý
+                            </span>
+                        {% elif task.status == 'In_Progress' %}
+                            <span class="badge bg-info-subtle text-info border-0 w-100">
+                                <i class="fas fa-spinner fa-spin me-1"></i> Đang làm
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success border-0 w-100">
+                                <i class="fas fa-check-circle me-1"></i> Hoàn thành
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-icon-sm btn-light border" title="Sửa" 
+                                    onclick="editTask({{ task.id }}, '{{ task.title|e }}', '{{ task.description|e if task.description else '' }}', '{{ task.category|e }}', '{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '' }}', '{{ task.priority }}', '{{ task.status }}')">
+                                <i class="fas fa-edit text-primary"></i>
+                            </button>
+                            <form action="{{ url_for('hr.manage_tasks') }}" method="POST" onsubmit="return confirm('Xóa nhiệm vụ này?')">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+                                <button type="submit" class="btn btn-icon-sm btn-light border" title="Xóa">
+                                    <i class="fas fa-trash-alt text-danger"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-secondary">
+                        <div class="py-4">
+                            <i class="fas fa-clipboard-list fa-4x mb-3 opacity-10"></i>
+                            <p class="mb-0">Không tìm thấy nhiệm vụ nào phù hợp.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Thêm Nhiệm Vụ -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-800"><i class="fas fa-plus-circle text-primary me-2"></i>Giao nhiệm vụ mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('hr.manage_tasks') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="action" value="add">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Tiêu đề nhiệm vụ</label>
+                            <input type="text" name="title" class="form-control glass-input" placeholder="VD: Review báo cáo tháng 4" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Danh mục</label>
+                            <input type="text" name="category" class="form-control glass-input" list="categoryOptions" placeholder="Chọn hoặc nhập mới">
+                            <datalist id="categoryOptions">
+                                <option value="Hành chính">
+                                <option value="Kỹ thuật">
+                                <option value="Marketing">
+                                <option value="Nhân sự">
+                                <option value="Kinh doanh">
+                            </datalist>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Mô tả chi tiết</label>
+                            <textarea name="description" class="form-control glass-input" rows="4" placeholder="Nhập hướng dẫn cụ thể cho nhân viên..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Người nhận việc</label>
+                            <select name="employee_id" class="form-select glass-input" required>
+                                <option value="">-- Chọn nhân viên --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.fullname }} ({{ emp.employee_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Hạn chót</label>
+                            <input type="date" name="due_date" class="form-control glass-input" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Ưu tiên</label>
+                            <select name="priority" class="form-select glass-input">
+                                <option value="Low">Thấp</option>
+                                <option value="Medium" selected>Trung bình</option>
+                                <option value="High">Cao</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">Giao việc ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Nhiệm Vụ -->
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-800"><i class="fas fa-edit text-primary me-2"></i>Cập nhật nhiệm vụ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('hr.manage_tasks') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="task_id" id="edit_task_id">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Tiêu đề</label>
+                            <input type="text" name="title" id="edit_title" class="form-control glass-input" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Danh mục</label>
+                            <input type="text" name="category" id="edit_category" class="form-control glass-input">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Mô tả</label>
+                            <textarea name="description" id="edit_description" class="form-control glass-input" rows="4"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Hạn chót</label>
+                            <input type="date" name="due_date" id="edit_due_date" class="form-control glass-input">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Ưu tiên</label>
+                            <select name="priority" id="edit_priority" class="form-select glass-input">
+                                <option value="Low">Thấp</option>
+                                <option value="Medium">Trung bình</option>
+                                <option value="High">Cao</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Trạng thái</label>
+                            <select name="status" id="edit_status" class="form-select glass-input">
+                                <option value="Pending">Chờ xử lý</option>
+                                <option value="In_Progress">Đang làm</option>
+                                <option value="Completed">Hoàn thành</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-icon-sm {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .btn-icon-sm:hover {
+        background: #f8fafc;
+        transform: scale(1.1);
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editTask(id, title, desc, cat, date, priority, status) {
+    document.getElementById('edit_task_id').value = id;
+    document.getElementById('edit_title').value = title;
+    document.getElementById('edit_description').value = desc;
+    document.getElementById('edit_category').value = cat;
+    document.getElementById('edit_due_date').value = date;
+    document.getElementById('edit_priority').value = priority;
+    document.getElementById('edit_status').value = status;
+    
+    new bootstrap.Modal(document.getElementById('edit_task_modal')).show();
+}
+
+// Fix modal ID mismatch if any
+const editModalEl = document.getElementById('editTaskModal');
+const editModal = new bootstrap.Modal(editModalEl);
+
+window.editTask = function(id, title, desc, cat, date, priority, status) {
+    document.getElementById('edit_task_id').value = id;
+    document.getElementById('edit_title').value = title;
+    document.getElementById('edit_description').value = desc;
+    document.getElementById('edit_category').value = cat;
+    document.getElementById('edit_due_date').value = date;
+    document.getElementById('edit_priority').value = priority;
+    document.getElementById('edit_status').value = status;
+    editModal.show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "layout.html" %}
+{% block title %}Chỉnh sửa Bài thi: {{ exam.title }} | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+.question-card { border-radius: 20px; border: none; background: #fff; }
+.question-number { width: 30px; height: 30px; border-radius: 50%; background: #6366f1; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+.option-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 15px; margin-bottom: 8px; font-size: 0.9rem; transition: 0.2s; }
+.option-box.correct { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: 600; }
+.add-q-card { border: 2px dashed #e2e8f0; background: rgba(248,250,252,0.5); border-radius: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <a href="{{ url_for('hr.manage_exams') }}" class="btn btn-link text-secondary p-0 mb-2 small fw-bold text-decoration-none">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+        </a>
+        <h3 class="fw-bold text-dark mb-1">{{ exam.title }}</h3>
+        <p class="text-secondary small mb-0">Cấu hình câu hỏi và các tùy chọn bài thi.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-dark rounded-pill px-3 fw-bold small shadow-sm" data-bs-toggle="modal" data-bs-target="#configExamModal">
+            <i class="fas fa-cog me-2"></i>Cấu hình bài thi
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Danh sách câu hỏi -->
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+             <h5 class="fw-bold mb-0">Ngân hàng câu hỏi ({{ exam.questions|length }})</h5>
+        </div>
+
+        {% for q in exam.questions %}
+        <div class="card question-card shadow-sm p-4 mb-4 border-start border-4 {% if q.question_type == 'Essay' %}border-warning{% else %}border-primary{% endif %}">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="question-number shadow-sm">{{ loop.index }}</div>
+                    <span class="badge {% if q.question_type == 'Essay' %}bg-warning-subtle text-warning{% else %}bg-primary-subtle text-primary{% endif %} rounded-pill" style="font-size:0.65rem;">
+                        {{ 'Tự luận' if q.question_type == 'Essay' else 'Trắc nghiệm' }}
+                    </span>
+                </div>
+                <form action="{{ url_for('hr.edit_exam', exam_id=exam.id) }}" method="POST">
+                    <input type="hidden" name="action" value="delete_question">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <button type="submit" class="btn btn-link py-0 px-2 text-danger" title="Xóa câu hỏi">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <h6 class="fw-bold text-dark mb-3 leading-base" style="font-size:1.1rem;">{{ q.question_text }}</h6>
+            
+            {% if q.question_type == 'MCQ' %}
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="option-box {% if q.correct_option == 'A' %}correct{% endif %}">
+                        <span class="me-2 text-muted fw-bold">A.</span> {{ q.option_a }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="option-box {% if q.correct_option == 'B' %}correct{% endif %}">
+                        <span class="me-2 text-muted fw-bold">B.</span> {{ q.option_b }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="option-box {% if q.correct_option == 'C' %}correct{% endif %}">
+                        <span class="me-2 text-muted fw-bold">C.</span> {{ q.option_c }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="option-box {% if q.correct_option == 'D' %}correct{% endif %}">
+                        <span class="me-2 text-muted fw-bold">D.</span> {{ q.option_d }}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-3 bg-light rounded-3 text-secondary italic small border-start border-width-3">
+                <i class="fas fa-pen-nib me-2"></i>Ứng viên sẽ nhập câu trả lời trực tiếp vào ô văn bản lớn. HR sẽ chấm điểm thủ công sau.
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 add-q-card shadow-none">
+            <div class="opacity-10 mb-2"><i class="fas fa-layer-group fa-4x"></i></div>
+            <h6 class="text-secondary fw-bold">Chưa có câu hỏi nào.</h6>
+            <p class="text-muted small">Hãy bắt đầu bằng cách thêm câu hỏi từ thanh bên phải.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Thanh bên: Thêm câu hỏi -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="border-radius: 24px; top: 20px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">Thêm câu hỏi mới</h5>
+                
+                <form action="{{ url_for('hr.edit_exam', exam_id=exam.id) }}" method="POST">
+                    <input type="hidden" name="action" value="add_question">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary text-uppercase">Loại câu hỏi</label>
+                        <select name="question_type" class="form-select bg-light border-0" id="qTypeSelect">
+                            <option value="MCQ">Trắc nghiệm (MCQ)</option>
+                            <option value="Essay">Tự luận (Essay)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary text-uppercase">Nội dung câu hỏi</label>
+                        <textarea name="question_text" class="form-control bg-light border-0" rows="3" required placeholder="Ví dụ: Lợi thế của Python so với các ngôn ngữ khác là gì?"></textarea>
+                    </div>
+
+                    <div id="mcq_options_container">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-secondary">Phương án A</label>
+                            <input type="text" name="option_a" class="form-control bg-light border-0 py-1" placeholder="Nhập đáp án A">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-secondary">Phương án B</label>
+                            <input type="text" name="option_b" class="form-control bg-light border-0 py-1" placeholder="Nhập đáp án B">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-secondary">Phương án C</label>
+                            <input type="text" name="option_c" class="form-control bg-light border-0 py-1" placeholder="Nhập đáp án C">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Phương án D</label>
+                            <input type="text" name="option_d" class="form-control bg-light border-0 py-1" placeholder="Nhập đáp án D">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-success">Đáp án đúng</label>
+                            <select name="correct_option" class="form-select bg-success-subtle border-0 text-success fw-bold">
+                                <option value="A">Câu A</option>
+                                <option value="B">Câu B</option>
+                                <option value="C">Câu C</option>
+                                <option value="D">Câu D</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                        <i class="fas fa-plus-circle me-1"></i>Thêm câu hỏi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Config Exam -->
+<div class="modal fade" id="configExamModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="fw-bold mb-0">Cấu hình bài thi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.edit_exam', exam_id=exam.id) }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="action" value="update_exam">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Tiêu đề bài thi</label>
+                        <input type="text" name="title" value="{{ exam.title }}" class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">Thời gian (phút)</label>
+                            <input type="number" name="duration_minutes" value="{{ exam.duration_minutes }}" class="form-control" required min="1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">Ngưỡng đạt (0-10)</label>
+                            <input type="number" name="pass_threshold" value="{{ exam.pass_threshold }}" step="0.1" class="form-control" required min="0" max="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold">Cập nhật thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('qTypeSelect').addEventListener('change', function() {
+        const container = document.getElementById('mcq_options_container');
+        if (this.value === 'Essay') {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+        }
+    });
+
+    // Khởi tạo trạng thái ban đầu
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const qType = document.getElementById('qTypeSelect').value;
+        const container = document.getElementById('mcq_options_container');
+        if (qType === 'Essay') {
+            container.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

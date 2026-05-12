@@ -1,0 +1,23 @@
+1. Tài khoản Quản trị (Admin)
+
+Chức vụ: Admin (Quản trị viên)
+Username: admin
+Mật khẩu: 123456
+2. Tài khoản Quản lý tuyển dụng / HR
+
+Chức vụ: HR (Bùi Quang Giám Đốc)
+Username: quanly
+Mật khẩu: 123456
+3. Tài khoản Nhân viên (Để test điểm danh/check-in)
+
+Nguyễn Văn Nhân | Username: nhanvien | Mật khẩu: 123456
+Lê văn Tám | Username: ibm1 | Mật khẩu: 123456
+Nguyễn Thị Hoa | Username: ibm2 | Mật khẩu: 123456
+Trần Bảo An | Username: ibm4 | Mật khẩu: 123456
+Phạm Minh Đức | Username: ibm5 | Mật khẩu: 123456
+Vũ Hoàng Nam | Username: ibm7 | Mật khẩu: 123456
+Đỗ Thùy Linh | Username: ibm8 | Mật khẩu: 123456
+Bùi Xuân Hùng | Username: ibm10 | Mật khẩu: 123456
+Lý Kim Ngân | Username: ibm11 | Mật khẩu: 123456
+Ngô Quang Minh | Username: ibm12 | Mật khẩu: 123456
+Hồ Vĩnh Khoa | Username: ibm13 | Mật khẩu: 123456

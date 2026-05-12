@@ -1,0 +1,468 @@
+{% extends "layout.html" %}
+
+{% block title %}Điểm danh thông minh | HTQLNhanSu{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Camera Container & Overlays */
+    #camera_box {
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+    }
+    
+    #camera_box.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(26, 78, 221, 0.2) !important;
+    }
+
+    .camera-placeholder {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.5);
+        z-index: 5;
+    }
+
+    .camera-placeholder i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .loading-overlay {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 10;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .loading-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Professional Spinner */
+    .spinner-box {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: transparent;
+        margin-bottom: 15px;
+    }
+
+    .circle-border {
+        width: 60px;
+        height: 60px;
+        padding: 3px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        background: linear-gradient(0deg, rgba(26, 78, 221, 0.1) 33%, rgba(26, 78, 221, 1) 100%);
+        animation: spin .8s linear infinite;
+    }
+
+    .circle-core {
+        width: 100%;
+        height: 100%;
+        background-color: #0f172a;
+        border-radius: 50%;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0); }
+        to { transform: rotate(359deg); }
+    }
+
+    /* QR Code Animation */
+    .qr-container {
+        animation: qrFadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes qrFadeIn {
+        from { opacity: 0; transform: scale(0.9) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Custom Toast */
+    .toast-custom {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        z-index: 9999;
+        min-width: 300px;
+        padding: 1.25rem;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        transform: translateX(120%);
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .toast-custom.show {
+        transform: translateX(0);
+    }
+
+    .toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .toast-success .toast-icon { background: #dcfce7; color: #166534; }
+    .toast-error .toast-icon { background: #fee2e2; color: #991b1b; }
+
+    /* Scanner Line Animation */
+    .scanner-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, transparent, var(--primary), transparent);
+        box-shadow: 0 0 15px var(--primary);
+        z-index: 6;
+        top: 0;
+        animation: scan 3s linear infinite;
+        display: none;
+    }
+
+    @keyframes scan {
+        0% { top: 0; }
+        50% { top: 100%; }
+        100% { top: 0; }
+    }
+
+    .status-dot {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .bg-warning { background-color: #f59e0b !important; }
+    .bg-success { background-color: #10b981 !important; }
+    .bg-danger { background-color: #ef4444 !important; }
+    
+    .pulse-warning { animation: pulseWarning 1.5s infinite; }
+    @keyframes pulseWarning {
+        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 animate-slide-up">
+    <h3 class="fw-bold text-dark mb-1">Điểm danh thông minh</h3>
+    <p class="text-secondary small">Xác thực khuôn mặt & Nhận mã QR định danh cá nhân.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 h-100 animate-slide-up" style="border-radius: 30px; animation-delay: 0.1s;">
+            <div class="text-center mb-4">
+                <div id="camera_box" class="position-relative mx-auto rounded-4 overflow-hidden shadow-sm" style="width: 100%; max-width: 480px; aspect-ratio: 4/3;">
+                    <!-- Placeholder -->
+                    <div id="placeholder" class="position-absolute top-0 start-0 w-100 h-100 camera-placeholder">
+                        <i class="fas fa-user-shield"></i>
+                        <h6 class="fw-bold mb-1">Hệ thống đã sẵn sàng</h6>
+                        <p class="small opacity-75">Bấm nút bên dưới để bắt đầu xác thực</p>
+                    </div>
+
+                    <!-- Video Stream -->
+                    <video id="video" width="100%" height="100%" autoplay playsinline class="object-fit-cover d-none"></video>
+                    <canvas id="canvas" class="d-none"></canvas>
+                    
+                    <!-- Scanner Line -->
+                    <div id="scanner_line" class="scanner-line"></div>
+
+                    <!-- Loading Overlay -->
+                    <div id="loading_overlay" class="position-absolute top-0 start-0 w-100 h-100 loading-overlay">
+                        <div class="spinner-box">
+                            <div class="circle-border">
+                                <div class="circle-core"></div>
+                            </div>
+                        </div>
+                        <h6 id="loading_text" class="fw-bold mb-0">Đang nhận diện khuôn mặt...</h6>
+                        <p class="tiny opacity-75 mt-2">Vui lòng giữ nguyên vị trí</p>
+                    </div>
+                </div>
+                
+                <!-- Live Status Indicator -->
+                <div id="face_status" class="mt-3 py-2 px-3 rounded-pill bg-light d-inline-block shadow-sm animate-fade-in" style="font-size: 0.75rem;">
+                    <span class="status-dot bg-warning me-2"></span>
+                    <span id="status_text" class="fw-bold text-secondary">🔍 Chờ kích hoạt camera...</span>
+                </div>
+            </div>
+
+            <div class="d-grid gap-3">
+                {% if not att or not att.check_in %}
+                    <button id="btn_check_in" class="btn btn-primary btn-lg rounded-pill fw-bold py-3 shadow-sm hover-scale">
+                        <i class="fas fa-sign-in-alt me-2"></i> XÁC NHẬN VÀO LÀM (CHECK-IN)
+                    </button>
+                {% elif not att.check_out %}
+                    <div id="checkout_section" class="text-center animate-fade-in">
+                        <div class="alert alert-primary border-0 rounded-4 py-3 mb-3 bg-primary-subtle text-primary small">
+                             <i class="fas fa-info-circle me-2"></i> Bạn đã vào làm lúc <strong>{{ att.check_in.strftime('%H:%M') }}</strong>.
+                        </div>
+                        <button id="btn_check_out" class="btn btn-dark btn-lg w-100 rounded-pill fw-bold py-3 shadow-sm hover-scale">
+                            <i class="fas fa-sign-out-alt me-2"></i> XÁC NHẬN TAN CA (CHECK-OUT)
+                        </button>
+                    </div>
+                {% else: %}
+                    <div class="alert alert-success border-0 rounded-4 text-center py-4 bg-success-subtle text-success animate-bounce-in">
+                        <i class="fas fa-check-circle fa-3x mb-3 d-block"></i>
+                        <h5 class="fw-bold">Hoàn tất!</h5>
+                        <p class="mb-0 small">Bạn đã hoàn thành ngày làm việc hôm nay.</p>
+                        <div class="tiny opacity-75 mt-2">Giờ ra: {{ att.check_out.strftime('%H:%M') }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- QR Code Result (Hidden Initially) -->
+        <div id="qr_result_card" class="card border-0 shadow-sm p-5 h-100 text-center d-none" style="border-radius: 30px;">
+            <div class="qr-container">
+                <h5 class="fw-800 mb-4 text-primary">Mã QR Xác thực của bạn</h5>
+                <div class="p-4 bg-light rounded-5 d-inline-block mb-4 shadow-inner border">
+                    <img id="qr_image" src="" alt="QR Code" class="img-fluid" style="width: 200px;">
+                </div>
+                <p id="qr_message" class="text-secondary small mb-4 px-3">Vui lòng quét mã này tại thiết bị quét ở cổng để hoàn tất quy trình.</p>
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                    <span class="text-secondary tiny fw-bold uppercase">Token:</span>
+                    <div id="token_display" class="badge bg-dark px-3 py-2 rounded-pill font-monospace h6 mb-0">-------</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instruction Card -->
+        <div id="instruction_card" class="card border-0 shadow-sm p-4 h-100 {{ 'd-none' if not att }}" style="border-radius: 30px; background: rgba(99, 102, 241, 0.05);">
+            <h6 class="fw-bold text-primary text-uppercase mb-4 letter-spacing-1" style="font-size: 0.75rem;">Nhật ký điểm danh hôm nay</h6>
+            <ul class="list-unstyled">
+                <li class="mb-4 d-flex align-items-center">
+                    <div class="bg-primary text-white p-3 rounded-4 me-3 shadow-sm"><i class="fas fa-door-open"></i></div>
+                    <div>
+                        <div class="small fw-bold text-secondary">Giờ vào:</div>
+                        <div class="h5 fw-800 mb-0">{{ att.check_in.strftime('%H:%M') if att and att.check_in else '--:--' }}</div>
+                    </div>
+                </li>
+                <li class="d-flex align-items-center">
+                    <div class="bg-dark text-white p-3 rounded-4 me-3 shadow-sm"><i class="fas fa-door-closed"></i></div>
+                    <div>
+                        <div class="small fw-bold text-secondary">Giờ ra:</div>
+                        <div class="h5 fw-800 mb-0">{{ att.check_out.strftime('%H:%M') if att and att.check_out else '--:--' }}</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Toast Notification Container -->
+<div id="toast_container"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const cameraBox = document.getElementById('camera_box');
+    const placeholder = document.getElementById('placeholder');
+    const loadingOverlay = document.getElementById('loading_overlay');
+    const scannerLine = document.getElementById('scanner_line');
+    const qrResultCard = document.getElementById('qr_result_card');
+    const instructionCard = document.getElementById('instruction_card');
+    
+    let streamActive = false;
+
+    function showToast(message, type = 'success') {
+        const toastId = 'toast_' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast-custom toast-${type}">
+                <div class="toast-icon">
+                    <i class="fas ${type === 'success' ? 'fa-check' : 'fa-times'}"></i>
+                </div>
+                <div>
+                    <div class="fw-bold small">${type === 'success' ? 'Thông báo' : 'Lỗi'}</div>
+                    <div class="text-secondary tiny">${message}</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('toast_container').insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(toastId);
+        setTimeout(() => toastElement.classList.add('show'), 100);
+        
+        setTimeout(() => {
+            toastElement.classList.remove('show');
+            setTimeout(() => toastElement.remove(), 500);
+        }, 4000);
+    }
+
+    async function startCamera() {
+        if (streamActive) return true;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" } 
+            });
+            video.srcObject = stream;
+            video.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+            cameraBox.classList.add('active');
+            scannerLine.style.display = 'block';
+            streamActive = true;
+            
+            updateStatus("🔍 Đang tìm khuôn mặt...", "warning", true);
+            
+            return true;
+        } catch (err) {
+            showToast("Vui lòng cho phép quyền truy cập camera để Check-in.", "error");
+            updateStatus("❌ Lỗi camera", "danger");
+            return false;
+        }
+    }
+
+    function updateStatus(text, color, pulse = false) {
+        const dot = document.querySelector('.status-dot');
+        const statusText = document.getElementById('status_text');
+        
+        dot.className = `status-dot bg-${color} ${pulse ? 'pulse-' + color : ''}`;
+        statusText.innerText = text;
+    }
+
+    // CHECK-IN FLOW (Camera Required)
+    async function performCheckIn() {
+        const btn = document.getElementById('btn_check_in');
+        const loadingText = document.getElementById('loading_text');
+        
+        if (!streamActive) {
+            const ready = await startCamera();
+            if (!ready) return;
+            await new Promise(r => setTimeout(r, 800));
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang xác thực...`;
+        
+        updateStatus("🙂 Đã phát hiện khuôn mặt", "success");
+        loadingOverlay.classList.add('show');
+        loadingText.innerText = "Đang quét khuôn mặt...";
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+        try {
+            const response = await fetch("{{ url_for('attendance.verify') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData, action: 'check_in' })
+            });
+            
+            const data = await response.json();
+
+            if (data.success) {
+                updateStatus("✅ Đã xác minh danh tính", "success");
+                loadingText.innerText = "Xác thực thành công!";
+                showToast("✅ Chấm công thành công", "success");
+                
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('show');
+                    document.getElementById('qr_image').src = data.qr_url;
+                    document.getElementById('token_display').innerText = data.token;
+                    
+                    cameraBox.parentElement.classList.add('d-none');
+                    document.getElementById('face_status').classList.add('d-none');
+                    btn.parentElement.classList.add('d-none');
+                    qrResultCard.classList.remove('d-none');
+                    
+                    const stream = video.srcObject;
+                    if (stream) stream.getTracks().forEach(track => track.stop());
+                }, 1500);
+            } else {
+                updateStatus("❌ Xác thực thất bại", "danger");
+                loadingOverlay.classList.remove('show');
+                showToast(data.message || "❌ Lỗi xác thực khuôn mặt.", "error");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i> XÁC NHẬN VÀO LÀM (CHECK-IN)`;
+                
+                setTimeout(() => {
+                    updateStatus("🔍 Đang quét lại...", "warning", true);
+                }, 2000);
+            }
+        } catch (err) {
+            updateStatus("❌ Lỗi kết nối", "danger");
+            loadingOverlay.classList.remove('show');
+            showToast("Lỗi kết nối máy chủ.", "error");
+            btn.disabled = false;
+        }
+    }
+
+    // CHECK-OUT FLOW (No Camera)
+    async function performCheckOut() {
+        const btn = document.getElementById('btn_check_out');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang ghi nhận...`;
+
+        try {
+            const response = await fetch("{{ url_for('attendance.checkout') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(`✅ Check-out thành công lúc ${data.time}`, "success");
+                
+                setTimeout(() => {
+                    document.getElementById('qr_image').src = data.qr_url;
+                    document.getElementById('token_display').innerText = data.token;
+                    document.getElementById('qr_message').innerText = "Vui lòng quét mã này để hoàn tất thủ tục ra về.";
+                    
+                    cameraBox.parentElement.classList.add('d-none');
+                    document.getElementById('checkout_section').classList.add('d-none');
+                    qrResultCard.classList.remove('d-none');
+                    instructionCard.classList.add('d-none');
+                }, 1000);
+            } else {
+                showToast(data.message, "error");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-sign-out-alt me-2"></i> XÁC NHẬN TAN CA (CHECK-OUT)`;
+            }
+        } catch (err) {
+            showToast("Lỗi kết nối máy chủ.", "error");
+            btn.disabled = false;
+        }
+    }
+
+    if (document.getElementById('btn_check_in')) {
+        document.getElementById('btn_check_in').addEventListener('click', performCheckIn);
+    }
+    if (document.getElementById('btn_check_out')) {
+        document.getElementById('btn_check_out').addEventListener('click', performCheckOut);
+    }
+</script>
+{% endblock %}
+

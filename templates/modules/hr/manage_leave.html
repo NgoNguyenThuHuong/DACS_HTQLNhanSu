@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block title %}Duyệt Nghỉ phép | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold text-dark mb-1">Duyệt yêu cầu Nghỉ phép</h3>
+    <p class="text-secondary small">Phê duyệt hoặc từ chối các yêu cầu nghỉ phép của nhân viên.</p>
+</div>
+
+<div class="row g-4">
+    {% for req in requests %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 24px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);">
+            <div class="d-flex align-items-center mb-4">
+                <img src="https://ui-avatars.com/api/?name={{ req.employee.fullname|urlencode }}&background=6366f1&color=fff" width="40" height="40" class="rounded-circle me-3">
+                <div>
+                    <div class="fw-800 small">{{ req.employee.fullname }}</div>
+                    <div class="text-secondary" style="font-size: 0.65rem;">{{ req.employee.department.name }}</div>
+                </div>
+                <div class="ms-auto">
+                    <span class="badge rounded-pill px-3 py-1 border-0 bg-warning-subtle text-warning small">{{ req.status|upper }}</span>
+                </div>
+            </div>
+            <div class="bg-light p-3 rounded-4 mb-3 border border-white">
+                <div class="small fw-bold mb-1 opacity-75">LÝ DO NGHỈ:</div>
+                <p class="small text-dark mb-0 fst-italic">"{{ req.reason }}"</p>
+                <div class="mt-2 text-primary fw-bold" style="font-size: 0.7rem;">
+                    <i class="far fa-calendar-check me-1"></i> {{ req.start_date.strftime('%d/%m/%Y') }} - {{ req.end_date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small fw-bold">Hạn mức còn lại:</span>
+                    <span class="small fw-800 text-{{ 'success' if req.employee.leave_days_quota - req.employee.leave_days_used > 5 else 'danger' }}">
+                        {{ req.employee.leave_days_quota - req.employee.leave_days_used }} ngày
+                    </span>
+                </div>
+                <div class="progress" style="height: 6px; border-radius: 10px; background: #eee;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (req.employee.leave_days_used / req.employee.leave_days_quota) * 100 }}%"></div>
+                </div>
+            </div>
+            <div class="mt-auto d-flex gap-2 pt-3 border-top">
+                <form action="{{ url_for('hr.manage_leave', req_id=req.id) }}" method="POST" class="flex-grow-1">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success w-100 rounded-pill py-2 fw-bold shadow-sm">PHÊ DUYỆT</button>
+                </form>
+                <form action="{{ url_for('hr.manage_leave', req_id=req.id) }}" method="POST" class="flex-grow-1">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn btn-outline-danger w-100 rounded-pill py-2 fw-bold shadow-sm">TỪ CHỐI</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5 opacity-50">Không có yêu cầu nghỉ phép nào cần xử lý.</div>
+    {% endfor %}
+</div>
+{% endblock %}

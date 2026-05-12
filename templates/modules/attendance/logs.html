@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}Nhật ký Chấm công | HTQLNhanSu{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Nhật ký Chấm công</h3>
+        <p class="text-secondary small">Theo dõi thời gian ra vào và xác thực hình ảnh của nhân viên.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm bg-white">
+            <i class="fas fa-download me-2"></i> XUẤT BÁO CÁO
+        </button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 30px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);">
+    <form method="GET" action="{{ url_for('hr.attendance_logs') }}" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-bold">Từ ngày</label>
+            <input type="date" name="start_date" class="form-control rounded-pill px-3 shadow-none border-0 bg-light" value="{{ start_date if start_date else now.strftime('%Y-%m-01') }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold">Đến ngày</label>
+            <input type="date" name="end_date" class="form-control rounded-pill px-3 shadow-none border-0 bg-light" value="{{ end_date if end_date else now.strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-bold">Tìm theo tên/mã NV</label>
+            <input type="text" name="search" class="form-control rounded-pill px-3 shadow-none border-0 bg-light" placeholder="Nhập tên hoặc mã nhân viên..." value="{{ search }}">
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-dark w-100 rounded-pill fw-bold shadow-sm">LỌC</button>
+            <a href="{{ url_for('hr.attendance_logs') }}" class="btn btn-light rounded-pill fw-bold shadow-sm border"><i class="fas fa-undo"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm p-4" style="border-radius: 30px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="border-0 text-secondary small text-uppercase">Nhân viên</th>
+                    <th class="border-0 text-secondary small text-uppercase">Ngày</th>
+                    <th class="border-0 text-secondary small text-uppercase">Check-in</th>
+                    <th class="border-0 text-secondary small text-uppercase text-center">Ảnh SI</th>
+                    <th class="border-0 text-secondary small text-uppercase">Check-out</th>
+                    <th class="border-0 text-secondary small text-uppercase text-center">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="py-3">
+                        <div class="fw-bold small">{{ log.employee.fullname }}</div>
+                        <div class="text-secondary small" style="font-size: 0.65rem;">{{ log.employee.employee_code }}</div>
+                    </td>
+                    <td class="small">{{ log.work_date.strftime('%d/%m/%Y') }}</td>
+                    <td class="small fw-bold {{ 'text-success' if log.check_in else 'text-danger' }}">
+                        {{ log.check_in.strftime('%H:%M:%S') if log.check_in else '--:--' }}
+                    </td>
+                    <td class="text-center">
+                        {% if log.check_in_photo %}
+                        <a href="javascript:void(0);" onclick="openImageModal('{{ url_for('static', filename='uploads/attendance/' + log.check_in_photo) }}')">
+                            <img src="{{ url_for('static', filename='uploads/attendance/' + log.check_in_photo) }}" width="40" height="40" class="rounded-3 border shadow-sm object-fit-cover" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        </a>
+                        {% else %}
+                        <div class="bg-light rounded-3 d-inline-block shadow-sm p-1 opacity-50" style="width: 40px; height: 40px;"><i class="fas fa-camera small"></i></div>
+                        {% endif %}
+                    </td>
+                    <td class="small fw-bold">
+                        {{ log.check_out.strftime('%H:%M:%S') if log.check_out else '--:--' }}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill px-3 py-1 border-0 
+                            {{ 'bg-success-subtle text-success' if log.status == 'Normal' else 'bg-warning-subtle text-warning' }}">
+                            {{ log.status|upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 opacity-50">Không có dữ liệu chấm công cho kỳ này.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal xem ảnh lớn -->
+<div id="imageModal" class="modal-overlay" onclick="closeImageModal(event)">
+    <span class="modal-close" onclick="closeModalForce()">&times;</span>
+    <img class="modal-content-img" id="imageModalContent">
+</div>
+
+<style>
+/* CSS cho Modal */
+.modal-overlay {
+    display: none; 
+    position: fixed; 
+    z-index: 1050; /* Cao hơn Bootstrap nav */
+    padding-top: 60px; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.8); 
+    backdrop-filter: blur(5px);
+}
+.modal-content-img {
+    margin: auto;
+    display: block;
+    width: auto;
+    max-width: 90%;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+/* Hiệu ứng zoom nhẹ khi hover */
+.modal-content-img:hover {
+    transform: scale(1.02);
+}
+.modal-close {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    z-index: 1051;
+}
+.modal-close:hover,
+.modal-close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+/* Responsive */
+@media only screen and (max-width: 700px){
+    .modal-content-img {
+        max-width: 95%;
+    }
+}
+</style>
+
+<script>
+// Logic mở modal
+function openImageModal(imgSrc) {
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("imageModalContent");
+    modal.style.display = "flex";
+    modalImg.src = imgSrc;
+}
+
+// Đóng khi click X
+function closeModalForce() {
+    document.getElementById("imageModal").style.display = "none";
+}
+
+// Đóng khi click ra ngoài ảnh
+function closeImageModal(event) {
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("imageModalContent");
+    // Chỉ đóng nếu click vào vùng overlay, không click vào ảnh
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
+
+{% endblock %}

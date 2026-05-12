@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card border-0 p-5 mb-5 shadow-lg overflow-hidden animate-slide-up" style="border-radius: 30px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; border: none;">
+    <div class="position-absolute top-0 end-0 p-4 opacity-10"><i class="fas fa-crown fa-10x"></i></div>
+    <div class="row align-items-center position-relative">
+        <div class="col-lg-7">
+            <h1 class="fw-800 mb-2">Xin chào, {{ current_user.fullname.split(' ')[-1] }}! 👋</h1>
+            <p class="opacity-75 mb-4 fw-500">Bảng điều khiển quản lý nhân sự - Dữ liệu thời gian thực.</p>
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('hr.manage_leave') }}" class="btn btn-white text-primary fw-bold px-4 rounded-pill shadow-none" style="background: #fff; border: none;">Duyệt đơn ngay</a>
+                <a href="{{ url_for('hr.employees_list') }}" class="btn btn-outline-white text-white border-white border-2 fw-bold px-4 rounded-pill">Quản lý đội ngũ</a>
+            </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block text-end">
+            <img src="https://ui-avatars.com/api/?name={{ current_user.fullname | urlencode }}&size=120&background=ffffff33&color=fff&bold=true" class="rounded-pill border border-4 border-white border-opacity-25 shadow">
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 animate-slide-up">
+    <!-- Sinh nhật -->
+    <div class="col-lg-4">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 20px;">
+            <h6 class="fw-bold text-secondary text-uppercase small mb-4 d-flex align-items-center"><i class="fas fa-cake-candles text-danger me-2"></i> Sinh nhật hôm nay</h6>
+            {% set birthdays = [] %}
+            {% if birthdays %}
+                {% for b in birthdays %}
+                <div class="d-flex align-items-center mb-3">
+                    <img src="https://ui-avatars.com/api/?name={{ b.fullname|urlencode }}" width="30" class="rounded-circle me-3">
+                    <div class="small fw-bold">{{ b.fullname }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4 opacity-50 small">Không có sinh nhật nào hôm nay.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Phê duyệt -->
+    <div class="col-lg-8">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 20px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold text-secondary text-uppercase small mb-0"><i class="fas fa-calendar-check text-primary me-2"></i> Đơn cần phê duyệt</h6>
+                <span class="badge bg-warning-subtle text-warning rounded-pill px-3 fw-bold">{{ pending_leave|length }} đơn mới</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <tbody>
+                        {% for req in pending_leave[:3] %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="fw-bold small">{{ req.employee.fullname }}</div>
+                                </div>
+                            </td>
+                            <td class="small text-secondary">{{ req.leave_type }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('hr.manage_leave') }}" class="btn btn-light btn-sm rounded-pill tiny fw-bold">Xem</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted small">Tất cả các yêu cầu đã được xử lý.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 animate-slide-up">
+    <!-- Attendance Chart -->
+    <div class="col-lg-7">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 20px;">
+            <h6 class="fw-bold text-secondary text-uppercase small mb-4"><i class="fas fa-chart-line text-primary me-2"></i> Hiệu suất Chấm công Hệ thống</h6>
+            <div style="height: 300px;"><canvas id="attendanceChart"></canvas></div>
+        </div>
+    </div>
+    <!-- Radar Chart (Team Talent) -->
+    <div class="col-lg-5">
+        <div class="card border-0 p-4 shadow-sm h-100" style="border-radius: 20px;">
+            <h6 class="fw-bold text-secondary text-uppercase small mb-4 text-center"><i class="fas fa-brain text-primary me-2"></i> Phân tích Năng lực Đội ngũ</h6>
+            <div style="height: 280px;"><canvas id="radarChart"></canvas></div>
+            <div class="mt-3 p-3 bg-light rounded-3 border-start border-3 border-primary">
+                <p class="tiny text-dark mb-0">{{ radar_data.insight if radar_data else 'Dữ liệu đang được tổng hợp...' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 animate-slide-up">
+    <!-- Activity -->
+    <div class="col-12">
+        <div class="card border-0 p-4 shadow-sm" style="border-radius: 20px;">
+            <h6 class="fw-bold text-secondary text-uppercase small mb-4"><i class="fas fa-bolt text-warning me-2"></i> Hoạt động mới nhất</h6>
+            <div class="row">
+                {% for act in recent_activities[:8] %}
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-light">
+                        <div class="bg-{{ act.color }}-subtle text-{{ act.color }} p-2 rounded-3 me-3" style="width: 35px; height: 35px; text-align: center;">
+                            <i class="fas {{ act.icon }} small"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small"><strong>{{ act.user }}</strong> {{ act.action }}</div>
+                            <div class="tiny text-muted">{{ act.time.strftime('%H:%M • %d/%m') }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Radar Chart
+        const radarCtx = document.getElementById('radarChart').getContext('2d');
+        const radarData = {{ radar_data | tojson }};
+        
+        if (radarData) {
+            new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: radarData.labels,
+                    datasets: [{
+                        label: 'Hệ thống',
+                        data: radarData.values,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#fff',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        r: { suggestedMin: 0, suggestedMax: 10, ticks: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Attendance Trend
+        const attCtx = document.getElementById('attendanceChart').getContext('2d');
+        const trendData = {{ attendance_trend|tojson if attendance_trend else '[]'|safe }};
+        if (trendData.length > 0) {
+            new Chart(attCtx, {
+                type: 'line',
+                data: {
+                    labels: trendData.map(d => d.date),
+                    datasets: [{
+                        label: 'Số người có mặt',
+                        data: trendData.map(d => d.count),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
