@@ -1,0 +1,1 @@
+from app.repositories.recruitment_repo import RecruitmentRepository

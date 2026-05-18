@@ -1,0 +1,67 @@
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white border-0 pt-4 pb-2">
+        <h5 class="mb-0 fw-bold text-dark">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo me-2"></i>Đề xuất Giải pháp Gắn kết & Giảm tải Tự động (AI-Driven Retention Recommendations)
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="text-secondary small mb-4">
+            Dựa trên kết quả phân tích SHAP về các nhân tố thúc đẩy rủi ro nghỉ việc của nhân viên này, hệ thống AI tự động đề xuất danh sách các hành động có mức độ ưu tiên tương ứng giúp cải thiện trải nghiệm làm việc của nhân sự.
+        </p>
+
+        {% if dashboard.recommendations %}
+            <div class="row">
+                {% for rec in dashboard.recommendations %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-0 bg-light rounded-4 h-100 p-2 position-relative overflow-hidden">
+                            <!-- Đường viền mỏng báo hiệu mức độ ưu tiên -->
+                            <div class="position-absolute top-0 start-0 bottom-0 width-4 
+                                {% if rec.priority == 'High' %}bg-danger{% elif rec.priority == 'Medium' %}bg-warning{% else %}bg-success{% endif %}"
+                                style="width: 5px;">
+                            </div>
+                            
+                            <div class="card-body ps-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">
+                                        {{ rec.title }}
+                                    </h6>
+                                    <span class="badge 
+                                        {% if rec.priority == 'High' %}bg-danger-subtle text-danger border border-danger-subtle
+                                        {% elif rec.priority == 'Medium' %}bg-warning-subtle text-warning border border-warning-subtle
+                                        {% else %}bg-success-subtle text-success border border-success-subtle{% endif %} rounded-3 small">
+                                        Ưu tiên: {{ rec.priority }}
+                                    </span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <span class="text-secondary small d-block mb-1">Tác nhân kích hoạt (Trigger Factor)</span>
+                                    <span class="badge bg-white text-dark border small fw-medium">
+                                        <i class="fa-solid fa-arrow-trend-up text-danger me-1"></i>{{ rec.trigger_factor }} (Impact: +{{ "%.3f"|format(rec.impact_score) }})
+                                    </span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <span class="text-secondary small d-block mb-1">Hành động cụ thể của HR (HR Action Item)</span>
+                                    <p class="mb-0 text-dark small leading-relaxed" style="font-size: 0.85rem; line-height: 1.5;">
+                                        {{ rec.action }}
+                                    </p>
+                                </div>
+
+                                <div class="p-2 bg-white rounded-3 border">
+                                    <span class="text-secondary d-block mb-1 fw-bold" style="font-size: 0.65rem; text-uppercase; letter-spacing: 0.05em;">Tương tác hệ thống (System Action Pipeline)</span>
+                                    <code class="text-indigo small" style="font-size: 0.78rem;">{{ rec.service_action }}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-heart-circle-check text-success fa-3x mb-3"></i>
+                <h6 class="fw-bold text-dark">Chỉ số gắn kết xuất sắc!</h6>
+                <p class="text-secondary small">Không phát hiện rủi ro nghỉ việc đáng kể nào cần hành động can thiệp.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>

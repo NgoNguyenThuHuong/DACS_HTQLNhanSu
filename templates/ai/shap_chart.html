@@ -1,0 +1,84 @@
+<div class="row">
+    <!-- Cột vẽ biểu đồ ngang SHAP -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-2">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fa-solid fa-chart-bar text-primary me-2"></i>Mô hình Đóng góp Đặc trưng (SHAP Local Contributions)
+                    </h5>
+                    <span class="badge bg-light text-secondary border">Explainable AI (XAI)</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary small">
+                    Biểu đồ thể hiện mức độ tác động (âm hoặc dương) của từng chỉ số nhân sự đối với quyết định cuối cùng của mô hình học máy.
+                </p>
+                <div style="height: 380px; position: relative;">
+                    <canvas id="shapFeatureChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột hiển thị Chi tiết Các yếu tố Rủi ro & Giảm thiểu -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body pt-4">
+                <!-- Yếu tố thúc đẩy Rủi ro tăng -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-danger mb-3">
+                        <i class="fa-solid fa-circle-exclamation me-2"></i>Nhân tố rủi ro hàng đầu (Risk Drivers)
+                    </h6>
+                    {% if dashboard.explanation.risk_factors %}
+                        <div class="list-group list-group-flush">
+                            {% for rf in dashboard.explanation.risk_factors %}
+                                <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-start py-2">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small" style="font-size: 0.85rem;">{{ rf.name }}</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Yếu tố tăng nguy cơ</div>
+                                    </div>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-3 small">
+                                        +{{ "%.3f"|format(rf.value) }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 bg-light rounded-3 text-secondary small">
+                            Không phát hiện nhân tố rủi ro đáng kể.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <hr class="text-secondary opacity-25 my-3">
+
+                <!-- Yếu tố giảm thiểu Rủi ro -->
+                <div>
+                    <h6 class="fw-bold text-success mb-3">
+                        <i class="fa-solid fa-circle-check me-2"></i>Nhân tố giảm thiểu (Mitigation Factors)
+                    </h6>
+                    {% if dashboard.explanation.mitigation_factors %}
+                        <div class="list-group list-group-flush">
+                            {% for mf in dashboard.explanation.mitigation_factors %}
+                                <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-start py-2">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small" style="font-size: 0.85rem;">{{ mf.name }}</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Yếu tố kéo giảm rủi ro</div>
+                                    </div>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-3 small">
+                                        {{ "%.3f"|format(mf.value) }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 bg-light rounded-3 text-secondary small">
+                            Không phát hiện nhân tố giảm thiểu đặc thù.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

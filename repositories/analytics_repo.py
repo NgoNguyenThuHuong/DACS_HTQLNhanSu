@@ -1,0 +1,1 @@
+from app.repositories.analytics_repo import AnalyticsRepository

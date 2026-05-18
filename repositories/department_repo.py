@@ -1,0 +1,1 @@
+from app.repositories.department_repo import DepartmentRepository

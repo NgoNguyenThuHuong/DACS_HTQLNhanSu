@@ -1,41 +1,102 @@
-# Tài liệu chi tiết Đồ án: Hệ thống Quản lý Nhân sự Thông minh (HTQLNhanSu)
+# Hệ thống Quản lý Nhân sự Thông minh (HTQLNhanSu AI-HRM)
 
-## 1. Giới thiệu tổng quan
-Dự án **HTQLNhanSu** là một hệ thống quản trị nhân sự hiện đại, được thiết kế để tự động hóa các quy trình quản lý trong doanh nghiệp. Hệ thống không chỉ tập trung vào việc lưu trữ hồ sơ mà còn cung cấp các công cụ phân tích thông minh và giao diện trải nghiệm người dùng cao cấp.
+Hệ thống HTQLNhanSu AI-HRM là một nền tảng quản trị nhân sự hiện đại được xây dựng trên ngôn ngữ **Python** bằng **Flask Framework**, tuân thủ nghiêm ngặt mô hình kiến trúc **Modular Monolith** kết hợp **Clean Architecture** và cấu trúc **AI-Ready Architecture**. 
 
-## 2. Các chức năng chính
-Hệ thống được phân quyền chặt chẽ với 3 vai trò chính:
+Hệ thống tích hợp các mô hình Machine Learning tiên tiến (XGBoost) kết hợp Explainable AI (SHAP) để dự đoán realtime và giải thích lý do nguy cơ nghỉ việc của nhân sự, đồng thời tích hợp Hệ thống khuyến nghị thông minh hỗ trợ bộ phận quản lý (HR) đưa ra quyết định tối ưu.
 
-### Đối với Quản trị viên (Admin)
-- **Quản trị toàn diện**: Quản lý tài khoản người dùng, phân quyền truy cập hệ thống.
-- **Kiểm soát hạ tầng**: Theo dõi logs hệ thống, thực hiện sao lưu (backup) dữ liệu.
-- **Quản lý cốt lõi**: Quản lý danh sách nhân viên và cơ cấu phòng ban toàn công ty.
+---
 
-### Đối với Giám đốc / HR (Human Resources)
-- **Phê duyệt nghỉ phép**: Quy trình duyệt đơn xin nghỉ phép trực tuyến nhanh chóng.
-- **Giám sát chấm công**: Theo dõi hoạt động hiện diện của nhân viên theo thời gian thực.
-- **AI Analytics**: Sử dụng trí tuệ nhân tạo để dự báo nguy cơ nghỉ việc dựa trên hiệu suất và chuyên cần.
-- **Báo cáo thống kê**: Xuất các báo cáo hiệu suất và thống kê nhân sự chi tiết.
+## 1. Bản đồ Kiến trúc Hệ thống
 
-### Đối với Nhân viên (Employee)
-- **Tự chấm công**: Chấm công hàng ngày dễ dàng qua giao diện web.
-- **Quản lý nghỉ phép**: Gửi đơn xin nghỉ phép và theo dõi trạng thái phê duyệt.
-- **Quản lý công việc**: Theo dõi các nhiệm vụ (tasks) được giao và cập nhật tiến độ.
-- **Hồ sơ cá nhân**: Tự quản lý và cập nhật thông tin cá nhân của mình.
+Hệ thống được tổ chức thành các phân tầng rõ ràng nhằm đảm bảo tính độc lập, dễ mở rộng và dễ bảo trì:
 
-## 3. Công nghệ sử dụng
-- **Ngôn ngữ**: PHP (Backend), JavaScript (Frontend logic).
-- **Cơ sở dữ liệu**: MySQL (Sử dụng PDO để đảm bảo bảo mật và hiệu năng).
-- **Giao diện**: Bootstrap 5, Font Awesome, Google Fonts, Chart.js (biểu đồ sinh động).
-- **Phong cách thiết kế**: Glassmorphism (hiệu ứng kính), Modern Minimalist với các hiệu ứng Blobs động.
+```text
+Presentation Layer (Flask Blueprints/Routes)
+         │
+         ▼
+Application Service Layer (Business Orchestration Services)
+         │
+   ┌─────┴─────────────────────────────────────┐
+   ▼                                           ▼
+Domain / AI Layer (XGBoost, SHAP Engine)   Data Access Layer (Repository Pattern)
+                                               │
+                                               ▼
+                                           SQLAlchemy Models (MySQL)
+```
 
-## 4. Hướng dẫn cài đặt
-1. **Môi trường**: Khuyến nghị sử dụng Laragon hoặc XAMPP (PHP 7.4+).
-2. **Database**: Tạo database có tên `ql_nhansu` và import file `database.sql` vào MySQL.
-3. **Cấu hình**: Chỉnh sửa thông tin kết nối DB trong `config/database.php` nếu cần.
-4. **Truy cập**: Truy cập qua trình duyệt với URL: `http://localhost/HTQLNhanSu/`.
+---
 
-## 5. Điểm nổi bật của đồ án
-- **Giao diện chuẩn Premium**: Sử dụng các kỹ thuật CSS hiện đại mang lại cảm giác chuyên nghiệp.
-- **Tính năng AI**: Dự báo thông minh giúp bộ phận HR có cái nhìn chủ động về tình hình nhân sự.
-- **Thiết kế Responsive**: Hoạt động mượt mà trên cả máy tính và thiết bị di động.
+## 2. Các Phân Hệ Tính Năng Chính
+
+Hệ thống phân quyền chặt chẽ theo 3 nhóm đối tượng sử dụng:
+
+### 💼 Đối với Quản trị viên (Admin)
+- **Quản trị hệ thống**: Quản lý tài khoản, cấp quyền truy cập, giám sát nhật ký bảo mật hệ thống.
+- **Quản lý cốt lõi**: Khởi tạo, theo dõi cấu trúc phòng ban và toàn bộ thông tin cơ cấu nhân sự.
+
+### 📊 Đối với Bộ phận Nhân sự (HR Specialist / Manager)
+- **Explainable AI (XAI) Dashboard**: Xem phân tích thời gian thực về rủi ro nghỉ việc của nhân viên, biểu đồ SHAP đóng góp biên trị, biểu đồ Radar năng lực cá nhân.
+- **Hệ khuyến nghị thông minh (Retention Recommendation)**: Nhận các đề xuất hành động thực tiễn (ưu tiên Cao/Trung bình) để giảm thiểu tỷ lệ nghỉ việc.
+- **Giám sát Chuyên cần & Công việc**: Quản lý chấm công bằng khuôn mặt (OpenCV), duyệt đơn nghỉ phép linh hoạt và phân bổ công việc.
+
+### 👤 Đối với Nhân viên (Employee)
+- **Check-in thông minh**: Điểm danh hàng ngày bằng nhận diện khuôn mặt hoặc mã QR bảo mật.
+- **Quản lý công việc & Nghỉ phép**: Theo dõi Kanban Task cá nhân, gửi đơn xin phép nghỉ và theo dõi tiến trình phê duyệt trực tuyến.
+
+---
+
+## 3. Công nghệ & Thư viện sử dụng
+
+- **Backend Framework**: Python 3.10+ / Flask Framework
+- **Database Access (ORM)**: SQLAlchemy / Flask-SQLAlchemy (MySQL)
+- **Machine Learning & AI**: 
+  - **XGBoost / Scikit-Learn**: Bộ phân loại dự đoán nguy cơ nghỉ việc (Attrition Classification).
+  - **SHAP (Shapley Additive exPlanations)**: Giải thích quyết định mô hình hộp đen (Black-box Explanations).
+- **Computer Vision**: OpenCV / Pillow (Xử lý ảnh & Nhận diện chấm công khuôn mặt).
+- **Caching Layer**: Redis / In-memory Cache Abstraction
+- **Frontend Layer**: Vanilla CSS (Premium Glassmorphism & Blobs design), Chart.js (Biểu đồ động).
+
+---
+
+## 4. Hướng dẫn Khởi chạy & Phát triển
+
+### Bước 1: Chuẩn bị môi trường
+1. Cài đặt Python (3.10 hoặc cao hơn).
+2. Tạo và kích hoạt môi trường ảo:
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   ```
+3. Cài đặt các thư viện phụ thuộc:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+### Bước 2: Thiết lập Cơ sở dữ liệu
+1. Khởi chạy MySQL Server (Cổng mặc định: `3306`, ví dụ: qua Laragon hoặc XAMPP).
+2. Tạo database tên `ql_nhansu`.
+3. Nhập cơ sở dữ liệu mẫu:
+   ```powershell
+   python setup_db.py
+   ```
+
+### Bước 3: Khởi chạy Ứng dụng
+Khởi chạy Flask server thông qua entrypoint chuẩn hóa:
+```powershell
+python run.py
+```
+Ứng dụng sẽ khả dụng tại địa chỉ: `http://127.0.0.1:5000/`.
+
+---
+
+## 5. Tài khoản Đăng nhập Mẫu (Mock Accounts)
+
+Xem thông tin tài khoản demo chi tiết trong file `tkmk.txt`:
+* **Admin**: `admin` / `123456`
+* **HR Specialist**: `quanly` / `123456`
+* **Employee**: `nhanvien` / `123456`
+
+---
+
+## 6. Sơ đồ Chỉ dẫn Mã nguồn
+Vui lòng tham khảo tài liệu [FILE_GUIDE.md](file:///c:/laragon/www/HTQLNhanSu1/DACS_HTQLNhanSu/FILE_GUIDE.md) để biết chi tiết chức năng cụ thể của từng tệp tin và cấu trúc gói (package) trong toàn dự án.

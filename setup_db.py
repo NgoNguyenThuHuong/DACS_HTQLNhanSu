@@ -1,5 +1,6 @@
 from app import create_app
-from models import db, Department, Employee, JobPost, Exam, ExamQuestion, Attendance, LeaveRequest, Candidate, Task, ExamResult, EmployeeAnalytics, RolePermission, UserPermission
+from database.models import Department, Employee, JobPost, Exam, ExamQuestion, Attendance, LeaveRequest, Candidate, Task, ExamResult, EmployeeAnalytics, RolePermission, UserPermission
+from core.extensions import db
 from datetime import datetime
 from sqlalchemy import create_engine, text
 

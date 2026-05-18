@@ -3,7 +3,8 @@ import codecs
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach()) if hasattr(sys.stdout, 'detach') else sys.stdout
 
 from app import create_app
-from models import db, Exam, ExamQuestion, CandidateAnswer
+from database.models import Exam, ExamQuestion, CandidateAnswer
+from core.extensions import db
 
 app = create_app()
 
