@@ -1,7 +1,7 @@
 from app import create_app
-from database.models import Department, Employee, JobPost, Exam, ExamQuestion, Attendance, LeaveRequest, Candidate, Task, ExamResult, EmployeeAnalytics, RolePermission, UserPermission
+from database.models import Department, Employee, JobPost, Exam, ExamQuestion, Attendance, LeaveRequest, Candidate, Task, ExamResult, EmployeeAnalytics, RolePermission, UserPermission, Shift, AttendanceLog, AttendanceAnomaly
 from core.extensions import db
-from datetime import datetime
+from datetime import datetime, time
 from sqlalchemy import create_engine, text
 
 # Create database if not exists
@@ -21,6 +21,21 @@ with app.app_context():
         from sqlalchemy import inspect
         inspector = inspect(db.engine)
         columns = [c['name'] for c in inspector.get_columns('candidates')]
+        
+        # Ensure new compatibility snapshot columns exist in 'attendance' table
+        att_columns = [c['name'] for c in inspector.get_columns('attendance')]
+        if 'total_work_hours' not in att_columns:
+            db.session.execute(text("ALTER TABLE attendance ADD COLUMN total_work_hours FLOAT DEFAULT 0.0"))
+            db.session.commit()
+            print("Da bo sung cot 'total_work_hours' vao bang 'attendance'.")
+        if 'total_break_minutes' not in att_columns:
+            db.session.execute(text("ALTER TABLE attendance ADD COLUMN total_break_minutes FLOAT DEFAULT 0.0"))
+            db.session.commit()
+            print("Da bo sung cot 'total_break_minutes' vao bang 'attendance'.")
+        if 'overtime_hours' not in att_columns:
+            db.session.execute(text("ALTER TABLE attendance ADD COLUMN overtime_hours FLOAT DEFAULT 0.0"))
+            db.session.commit()
+            print("Da bo sung cot 'overtime_hours' vao bang 'attendance'.")
         
         # List of columns to check and add
         required_cols = {
@@ -165,5 +180,15 @@ with app.app_context():
         db.session.add_all([q1, q2])
         db.session.commit()
         print("Da tao cau hoi mau.")
+
+    # Seed default shifts if none exist
+    if not Shift.query.first():
+        s1 = Shift(name='Morning Shift', start_time=time(8, 0), end_time=time(12, 0), is_overnight=False)
+        s2 = Shift(name='Afternoon Shift', start_time=time(13, 0), end_time=time(17, 0), is_overnight=False)
+        s3 = Shift(name='Overtime Shift', start_time=time(18, 0), end_time=time(21, 0), is_overnight=False)
+        s4 = Shift(name='Overnight Shift', start_time=time(22, 0), end_time=time(6, 0), is_overnight=True)
+        db.session.add_all([s1, s2, s3, s4])
+        db.session.commit()
+        print("Da khoi tao cac ca lam viec enterprise mac dinh.")
 
     print("Kiem tra/Khoi tao du lieu hoan tat!")

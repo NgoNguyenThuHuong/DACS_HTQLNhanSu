@@ -5,4 +5,5 @@ from app.services.hr_service import HRService
 from app.services.analytics_service import AnalyticsService
 from app.services.ai_service import AIService
 from app.services.email_service import send_passed_email, send_failed_email
+from app.services.attendance_session_service import AttendanceSessionService
 

@@ -12,5 +12,8 @@ from .models import (
     CandidateAnswer,
     EmployeeAnalytics,
     RolePermission,
-    UserPermission
+    UserPermission,
+    Shift,
+    AttendanceLog,
+    AttendanceAnomaly
 )

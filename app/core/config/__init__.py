@@ -5,6 +5,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'mysql+mysqlconnector://root:@localhost/ql_nhansu'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    ATTENDANCE_COOLDOWN_SECONDS = 180
 
     # Upload configurations
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads')

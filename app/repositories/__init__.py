@@ -7,4 +7,6 @@ from app.repositories.task_repo import TaskRepository
 from app.repositories.recruitment_repo import RecruitmentRepository
 from app.repositories.analytics_repo import AnalyticsRepository
 from app.repositories.ai_repo import AIRepository
+from app.repositories.shift_repo import ShiftRepository
+from app.repositories.attendance_log_repo import AttendanceLogRepository
 from app.repositories.unit_of_work import UnitOfWork

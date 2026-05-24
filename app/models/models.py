@@ -34,7 +34,7 @@ class Employee(UserMixin, db.Model):
     avatar = db.Column(db.String(255), default='default_avatar.png')
     leave_days_quota = db.Column(db.Integer, default=12)
     leave_days_used = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relationships
     attendance = db.relationship('Attendance', backref='employee', lazy=True)
@@ -52,6 +52,51 @@ class Attendance(db.Model):
     check_in_photo = db.Column(db.String(255))
     check_out_photo = db.Column(db.String(255))
     qr_code_token = db.Column(db.String(100))
+    total_work_hours = db.Column(db.Float, default=0.0)
+    total_break_minutes = db.Column(db.Float, default=0.0)
+    overtime_hours = db.Column(db.Float, default=0.0)
+
+class Shift(db.Model):
+    __tablename__ = 'shifts'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    is_overnight = db.Column(db.Boolean, default=False)
+
+    logs = db.relationship('AttendanceLog', backref='shift', lazy=True)
+
+class AttendanceLog(db.Model):
+    __tablename__ = 'attendance_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    action_type = db.Column(db.String(20), nullable=False) # 'CHECK_IN', 'CHECK_OUT', 'BREAK_OUT', 'BREAK_IN'
+    shift_id = db.Column(db.Integer, db.ForeignKey('shifts.id'), nullable=True)
+    verification_type = db.Column(db.String(50)) # 'face', 'qr', 'manual'
+    face_confidence = db.Column(db.Float)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    device_id = db.Column(db.String(255))
+    photo_path = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # Relationships
+    employee = db.relationship('Employee', backref=db.backref('attendance_logs', lazy=True))
+
+class AttendanceAnomaly(db.Model):
+    __tablename__ = 'attendance_anomalies'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    attendance_log_id = db.Column(db.Integer, db.ForeignKey('attendance_logs.id'), nullable=True)
+    anomaly_type = db.Column(db.String(50), nullable=False) # 'CONSECUTIVE_CHECK_IN', 'CONSECUTIVE_CHECK_OUT', 'ORPHAN_CHECK_OUT', etc.
+    description = db.Column(db.Text)
+    resolved = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # Relationships
+    employee = db.relationship('Employee', backref=db.backref('attendance_anomalies', lazy=True))
+    attendance_log = db.relationship('AttendanceLog', backref=db.backref('anomalies', lazy=True))
 
 class LeaveRequest(db.Model):
     __tablename__ = 'leave_requests'
@@ -62,7 +107,7 @@ class LeaveRequest(db.Model):
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.Enum('Pending', 'Approved', 'Rejected'), default='Pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class Task(db.Model):
     __tablename__ = 'tasks'
@@ -74,7 +119,7 @@ class Task(db.Model):
     due_date = db.Column(db.DateTime)
     priority = db.Column(db.Enum('Low', 'Medium', 'High'), default='Medium')
     status = db.Column(db.Enum('Pending', 'In_Progress', 'Completed'), default='Pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class JobPost(db.Model):
     __tablename__ = 'recruitment_jobs'
@@ -83,7 +128,7 @@ class JobPost(db.Model):
     description = db.Column(db.Text)
     requirements = db.Column(db.Text)
     status = db.Column(db.Enum('Open', 'Closed'), default='Open')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     candidates = db.relationship('Candidate', backref='job', lazy=True)
 
 class Candidate(db.Model):
@@ -99,7 +144,7 @@ class Candidate(db.Model):
     email_sent = db.Column(db.Boolean, default=False)
     reviewed_at = db.Column(db.DateTime)
     reviewed_by = db.Column(db.Integer, db.ForeignKey('employees.id'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     results = db.relationship('ExamResult', backref='candidate', lazy=True)
 
 class Exam(db.Model):
@@ -108,7 +153,7 @@ class Exam(db.Model):
     title = db.Column(db.String(200), nullable=False)
     duration_minutes = db.Column(db.Integer, default=30)
     pass_threshold = db.Column(db.Float, default=7.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     questions = db.relationship('ExamQuestion', backref='exam', lazy=True)
     results = db.relationship('ExamResult', backref='exam', lazy=True)
 
@@ -135,7 +180,7 @@ class ExamResult(db.Model):
     mcq_total = db.Column(db.Integer, default=0)
     hr_feedback = db.Column(db.Text)
     status = db.Column(db.Enum('Under_Review', 'Completed'), default='Under_Review')
-    completed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, default=datetime.now)
     answers = db.relationship('CandidateAnswer', backref='result', lazy=True)
 
     @property

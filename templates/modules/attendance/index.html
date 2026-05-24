@@ -294,6 +294,7 @@
     const instructionCard = document.getElementById('instruction_card');
     
     let streamActive = false;
+    let isSubmitting = false;
 
     function showToast(message, type = 'success') {
         const toastId = 'toast_' + Date.now();
@@ -352,19 +353,29 @@
 
     // CHECK-IN FLOW (Camera Required)
     async function performCheckIn() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
         const btn = document.getElementById('btn_check_in');
         const loadingText = document.getElementById('loading_text');
         
+        // Vô hiệu hóa nút ngay lập tức và thay đổi giao diện để chặn spam click
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang khởi động camera...`;
+        
         if (!streamActive) {
             const ready = await startCamera();
-            if (!ready) return;
+            if (!ready) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i> XÁC NHẬN VÀO LÀM (CHECK-IN)`;
+                isSubmitting = false;
+                return;
+            }
             await new Promise(r => setTimeout(r, 800));
         }
 
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang xác thực...`;
-        
-        updateStatus("🙂 Đã phát hiện khuôn mặt", "success");
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang xác thực khuôn mặt...`;
+        updateStatus("🙂 Đang nhận diện...", "warning", true);
         loadingOverlay.classList.add('show');
         loadingText.innerText = "Đang quét khuôn mặt...";
 
@@ -399,6 +410,7 @@
                     
                     const stream = video.srcObject;
                     if (stream) stream.getTracks().forEach(track => track.stop());
+                    isSubmitting = false;
                 }, 1500);
             } else {
                 updateStatus("❌ Xác thực thất bại", "danger");
@@ -406,6 +418,7 @@
                 showToast(data.message || "❌ Lỗi xác thực khuôn mặt.", "error");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i> XÁC NHẬN VÀO LÀM (CHECK-IN)`;
+                isSubmitting = false;
                 
                 setTimeout(() => {
                     updateStatus("🔍 Đang quét lại...", "warning", true);
@@ -416,11 +429,16 @@
             loadingOverlay.classList.remove('show');
             showToast("Lỗi kết nối máy chủ.", "error");
             btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i> XÁC NHẬN VÀO LÀM (CHECK-IN)`;
+            isSubmitting = false;
         }
     }
 
     // CHECK-OUT FLOW (No Camera)
     async function performCheckOut() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
         const btn = document.getElementById('btn_check_out');
         btn.disabled = true;
         btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Đang ghi nhận...`;
@@ -445,15 +463,19 @@
                     document.getElementById('checkout_section').classList.add('d-none');
                     qrResultCard.classList.remove('d-none');
                     instructionCard.classList.add('d-none');
+                    isSubmitting = false;
                 }, 1000);
             } else {
                 showToast(data.message, "error");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fas fa-sign-out-alt me-2"></i> XÁC NHẬN TAN CA (CHECK-OUT)`;
+                isSubmitting = false;
             }
         } catch (err) {
             showToast("Lỗi kết nối máy chủ.", "error");
             btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-sign-out-alt me-2"></i> XÁC NHẬN TAN CA (CHECK-OUT)`;
+            isSubmitting = false;
         }
     }
 

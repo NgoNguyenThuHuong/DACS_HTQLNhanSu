@@ -20,6 +20,9 @@ def verify():
     data = request.get_json() or {}
     image_data = data.get('image')
     action = data.get('action') # 'check_in' or 'check_out'
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    device_id = data.get('device_id') or request.headers.get('User-Agent')
     
     dept_name = current_user.department.name if current_user.department else ""
     pos_str = current_user.position if current_user.position else ""
@@ -34,7 +37,10 @@ def verify():
             position_str=pos_str,
             action=action,
             image_base64=image_data,
-            upload_folder=upload_folder
+            upload_folder=upload_folder,
+            latitude=latitude,
+            longitude=longitude,
+            device_id=device_id
         )
         
         return jsonify({
