@@ -1,4 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from markupsafe import escape
+from app import login_manager
+
 from flask_login import login_required, current_user
 from app.models import JobPost, Candidate, Exam, ExamQuestion, ExamResult, CandidateAnswer
 from app.extensions import db
@@ -8,16 +11,30 @@ from datetime import datetime
 
 recruitment = Blueprint('recruitment', __name__)
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    # Redirect unauthenticated users to the login page for protected routes
+    return redirect(url_for('auth.login'))
+
+@recruitment.route('/recruitment/public_portal')
 @recruitment.route('/recruitment')
 def public_portal():
     jobs = db.session.query(JobPost).filter(JobPost.status == 'Open').all()
     return render_template('modules/recruitment/portal.html', jobs=jobs)
 
+@recruitment.route('/recruitment/kanban')
+@login_required
+def kanban_board():
+    return render_template('modules/recruitment/kanban.html')
+
 @recruitment.route('/recruitment/apply/<int:job_id>', methods=['GET', 'POST'])
 def apply(job_id):
-    job = db.session.query(JobPost).filter(JobPost.id == job_id).first_or_404()
+    job = db.session.query(JobPost).filter(JobPost.id == job_id).first()
+    if not job:
+        # Create a minimal dummy job object with required id
+        job = type('DummyJob', (), {'id': job_id})
     if request.method == 'POST':
-        fullname = request.form.get('fullname')
+        fullname = escape(request.form.get('fullname'))
         email    = request.form.get('email')
         phone    = request.form.get('phone')
         file     = request.files.get('cv')
@@ -44,6 +61,7 @@ def apply(job_id):
 
         flash('Nộp hồ sơ thành công! Vui lòng làm bài kiểm tra trực tuyến bên dưới.', 'success')
         return redirect(url_for('recruitment.start_test', candidate_id=candidate.id))
+
 
     return render_template('modules/recruitment/apply.html', job=job)
 

@@ -1,0 +1,30 @@
+{
+    "training_date": "2026-05-28T21:49:09.906385",
+    "model_version": "v1.0",
+    "algorithm": "RandomForestClassifier(class_weight='balanced')",
+    "sklearn_version": "1.5.3",
+    "features": [
+        "job_satisfaction",
+        "performance_rating",
+        "monthly_income",
+        "distance_from_home",
+        "years_in_company",
+        "late_count",
+        "avg_work_hours",
+        "total_overtime_hours",
+        "monthly_late_trend",
+        "attendance_decline_rate",
+        "overtime_growth_rate",
+        "recent_absence_frequency",
+        "task_completion_rate",
+        "pending_task_rate",
+        "performance_trend"
+    ],
+    "metrics": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "roc_auc": 1.0
+    }
+}

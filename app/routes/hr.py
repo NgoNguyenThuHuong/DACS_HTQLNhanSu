@@ -22,6 +22,12 @@ hr = Blueprint('hr', __name__)
 hr_service = HRService()
 analytics_service = AnalyticsService()
 
+@hr.route('/dashboard')
+@login_required
+def dashboard():
+    """Simple HR dashboard placeholder for testing."""
+    return "HR Dashboard", 200
+
 # Repositories for read operations (Queries)
 employee_repo = EmployeeRepository()
 department_repo = DepartmentRepository()

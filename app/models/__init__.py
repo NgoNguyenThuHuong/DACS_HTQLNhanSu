@@ -17,3 +17,4 @@ from .models import (
     AttendanceLog,
     AttendanceAnomaly
 )
+from .pipeline import CandidatePipeline

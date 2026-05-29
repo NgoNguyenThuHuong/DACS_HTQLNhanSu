@@ -1,0 +1,51 @@
+name: Enterprise AI-HRM CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov bandit ruff
+        
+    - name: Run Ruff Linter
+      run: |
+        ruff check app/ tests/ scripts/
+        
+    - name: Run Bandit Security Scan
+      run: |
+        bandit -r app/ -ll -ii
+        
+    - name: Run Tests & Coverage
+      run: |
+        pytest -q --cov=app --cov-report=xml --junitxml=reports/junit.xml
+        
+    - name: Generate XAI Report
+      run: |
+        python scripts/generate_xai_report.py
+        
+    - name: Compile QA Report
+      run: |
+        python scripts/compile_qa_report.py
+        
+    - name: Upload Test Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: qa-reports
+        path: reports/

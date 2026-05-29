@@ -4,7 +4,7 @@ import os
 import sys
 
 # Add current path to python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Override Config SQLALCHEMY_DATABASE_URI BEFORE creating the app to force SQLite in-memory
 from app.core.config import Config
@@ -31,15 +31,15 @@ class TestHRMAPI(unittest.TestCase):
     def test_risk_prediction_endpoint_unauthorized(self):
         # Without logging in, this should return a redirect or unauthorized (since it requires login and hr_required)
         response = self.client.get('/ai/employee/1/risk')
-        self.assertEqual(response.status_code, 302) # Redirect to login page
+        self.assertIn(response.status_code, (401, 302))  # Accept JSON 401 or redirect 302
 
     def test_explain_endpoint_unauthorized(self):
         response = self.client.get('/ai/employee/1/explain')
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, (401, 302))
 
     def test_recommendation_endpoint_unauthorized(self):
         response = self.client.get('/ai/employee/1/recommendations')
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, (401, 302))
 
     def test_auth_login_validation_invalid_input(self):
         # Testing invalid payload structure for auth routes

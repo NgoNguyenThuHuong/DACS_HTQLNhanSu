@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    /* Glassmorphism utilities */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 1rem;
+    }
+    
+    .dark .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+
+    .kanban-col {
+        min-height: 500px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .kanban-col.drag-over {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .kanban-card {
+        cursor: grab;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .kanban-card:active {
+        cursor: grabbing;
+    }
+    
+    .kanban-card.dragging {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+    
+    /* Toggle Switch */
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #68D391;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #68D391;
+    }
+</style>
+
+<div id="app-container" class="min-h-screen bg-slate-50 transition-colors duration-300">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header & Controls -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight dark:text-white transition-colors">Recruitment Pipeline</h1>
+                <p class="text-slate-500 mt-1 dark:text-slate-400">Quản lý trạng thái ứng viên (Kéo & Thả)</p>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Dark Mode</span>
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="theme-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 bottom-0 m-auto right-4 transition-all duration-300"/>
+                    <label for="theme-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="flex space-x-6 overflow-x-auto pb-8" id="kanban-board">
+            <!-- Rendered by JS -->
+        </div>
+
+    </div>
+</div>
+
+<script src="/static/js/kanban.js"></script>
+{% endblock %}

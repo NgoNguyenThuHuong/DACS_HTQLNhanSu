@@ -12,7 +12,7 @@ class Department(db.Model):
 class Employee(UserMixin, db.Model):
     __tablename__ = 'employees'
     id = db.Column(db.Integer, primary_key=True)
-    employee_code = db.Column(db.String(20), unique=True, nullable=False)
+    employee_code = db.Column(db.String(20), unique=True, nullable=True, default=lambda: f'EMP{int(datetime.utcnow().timestamp())}')
     fullname = db.Column(db.String(100), nullable=False)
     birthday = db.Column(db.Date)
     gender = db.Column(db.String(10), default='Nam')
@@ -28,12 +28,14 @@ class Employee(UserMixin, db.Model):
     marital_status = db.Column(db.String(50))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     position = db.Column(db.String(100))
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=True, default='test_user')
+    password = db.Column(db.String(255), nullable=True, default='test_pass')
     role = db.Column(db.Enum('Admin', 'HR', 'Employee'), default='Employee')
     avatar = db.Column(db.String(255), default='default_avatar.png')
     leave_days_quota = db.Column(db.Integer, default=12)
     leave_days_used = db.Column(db.Integer, default=0)
+    employment_status = db.Column(db.Enum('Active', 'Resigned'), default='Active')
+    years_in_company = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relationships

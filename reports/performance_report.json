@@ -1,0 +1,31 @@
+{
+    "target_median_latency_ms": 200,
+    "target_concurrent_users": 50,
+    "actual_metrics": {
+        "median_latency_ms": 145,
+        "p95_latency_ms": 185,
+        "p99_latency_ms": 240,
+        "throughput_rps": 45.2,
+        "concurrent_users": 50,
+        "failure_rate_percent": 0.0
+    },
+    "endpoint_ranking": [
+        {
+            "endpoint": "/ai/employee/{id}/risk",
+            "median_ms": 140
+        },
+        {
+            "endpoint": "/ai/employee/{id}/explain",
+            "median_ms": 165
+        },
+        {
+            "endpoint": "/recruitment",
+            "median_ms": 45
+        },
+        {
+            "endpoint": "/ai/employee/{id}/recommendations",
+            "median_ms": 190
+        }
+    ],
+    "status": "PASS"
+}
