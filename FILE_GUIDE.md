@@ -54,6 +54,7 @@ Tài liệu này cung cấp bản đồ chi tiết và giải thích chức năn
 
 * **`run.py`**: Điểm khởi chạy ứng dụng chính của toàn hệ thống Flask.
 * **`setup_db.py`**: Script tự động tạo bảng, thiết lập quan hệ và khởi tạo dữ liệu mẫu cho CSDL MySQL.
+* **`seed_recruitment_data.py`**: Script tạo dữ liệu mẫu cho phân hệ Tuyển dụng (Job Posts, Exams, Candidates).
 * **`database.sql`**: Bản sao lưu cấu trúc database thuần MySQL.
 * **`tkmk.txt`**: Lưu trữ danh sách tài khoản, mật khẩu kiểm thử mặc định của hệ thống.
 * **`requirements.txt`**: Định nghĩa danh sách các thư viện Python cần cài đặt.

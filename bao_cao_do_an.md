@@ -17,6 +17,7 @@ Hệ thống AI-HRM được thiết kế để bao quát vòng đời làm vi�
 - **Chấm công (Attendance):** Nhân viên thực hiện Check-in/Check-out hàng ngày. Hệ thống tự động phát hiện đi trễ (Late Detection) và tính toán giờ làm thêm (Overtime).
 - **Quản lý nghỉ phép (Leave Request):** Nhân viên chủ động nộp đơn xin nghỉ phép. HR/Admin sẽ phê duyệt (Approve) hoặc từ chối (Reject), hệ thống tự động trừ quỹ ngày phép (Leave Quota).
 - **Quản lý công việc (Task Management):** Phân công công việc, cập nhật tiến độ (Pending, In Progress, Completed), quản lý deadline và tự động đánh dấu các task quá hạn (Overdue).
+- **Quản lý Tuyển dụng (Recruitment Management):** Đăng tuyển các vị trí công việc, quản lý ứng viên nộp hồ sơ, tạo các bài kiểm tra đánh giá năng lực (Exams) gồm câu hỏi trắc nghiệm/tự luận và tự động chấm điểm để hỗ trợ quyết định tuyển dụng.
 - **Dashboard thống kê:** Cung cấp biểu đồ trực quan (Biểu đồ phân bổ phòng ban, tỷ lệ hoàn thành công việc, lịch sử chấm công) để ban giám đốc nắm bắt tình hình.
 - **AI dự đoán nghỉ việc (AI Attrition Prediction):** Phân hệ thông minh thu thập dữ liệu về số lần đi trễ, tỷ lệ hoàn thành công việc, thời gian làm thêm... để dự báo nguy cơ một nhân viên chuẩn bị nghỉ việc, kết hợp công nghệ Giải thích AI (Explainable AI - XAI) để chỉ ra nguyên nhân cốt lõi.
 
@@ -40,6 +41,9 @@ Hệ thống xoay quanh các thực thể chính như sau:
 * `TASK`(**id**, title, description, due_date, status, created_at)
 * `LEAVE_REQUEST`(**id**, leave_type, reason, start_date, end_date, status, created_at)
 * `EMPLOYEE_ANALYTICS`(**id**, job_satisfaction, monthly_income, performance_rating)
+* `RECRUITMENT_JOBS`(**id**, title, description, requirements, status, created_at)
+* `CANDIDATES`(**id**, job_id, fullname, email, phone, status, created_at)
+* `EXAMS`(**id**, title, duration_minutes, pass_threshold, created_at)
 
 ## 2.2 Mô hình ERD (Entity-Relationship Diagram)
 

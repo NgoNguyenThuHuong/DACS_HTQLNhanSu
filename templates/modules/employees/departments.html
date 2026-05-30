@@ -27,8 +27,8 @@
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                 <div class="small fw-bold text-dark"><i class="fas fa-users me-1 opacity-50"></i> {{ dept.employees|length }} Nhân viên</div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;"><i class="fas fa-edit small text-primary"></i></button>
-                    <button class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;"><i class="fas fa-trash-alt small text-danger"></i></button>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#editDeptModal{{ dept.id }}"><i class="fas fa-edit small text-primary"></i></button>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle p-0" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#deleteDeptModal{{ dept.id }}"><i class="fas fa-trash-alt small text-danger"></i></button>
                 </div>
             </div>
         </div>
@@ -47,6 +47,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('hr.departments_list') }}" method="POST">
+                <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4 pt-0">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Tên phòng ban</label>
@@ -64,4 +65,60 @@
         </div>
     </div>
 </div>
+
+<!-- Edit and Delete Modals for each department -->
+{% for dept in departments %}
+<!-- Modal Sửa Phòng ban -->
+<div class="modal fade" id="editDeptModal{{ dept.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4">
+                <h5 class="fw-800 mb-0">Sửa Phòng ban</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.departments_list') }}" method="POST">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="dept_id" value="{{ dept.id }}">
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tên phòng ban</label>
+                        <input type="text" name="name" class="form-control rounded-3" value="{{ dept.name }}" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold">Mô tả chi tiết</label>
+                        <textarea name="description" class="form-control rounded-3" rows="3">{{ dept.description }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">CẬP NHẬT THÔNG TIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xóa Phòng ban -->
+<div class="modal fade" id="deleteDeptModal{{ dept.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 p-4">
+                <h5 class="fw-800 mb-0 text-danger">Xóa Phòng ban</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('hr.departments_list') }}" method="POST">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="dept_id" value="{{ dept.id }}">
+                <div class="modal-body p-4 pt-0">
+                    <p>Bạn có chắc chắn muốn xóa phòng ban <strong>{{ dept.name }}</strong> không?</p>
+                    <p class="text-danger small mb-0"><i class="fas fa-exclamation-triangle me-1"></i> Không thể xóa phòng ban nếu đang có nhân viên.</p>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-pill py-2 fw-bold flex-grow-1" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger rounded-pill py-2 fw-bold flex-grow-1 shadow-sm">Xóa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

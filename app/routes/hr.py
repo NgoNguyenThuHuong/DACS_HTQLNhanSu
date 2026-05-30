@@ -121,13 +121,27 @@ def departments_list():
         return "Unauthorized", 403
 
     if request.method == 'POST':
+        action = request.form.get('action', 'add')
         try:
-            name = request.form.get('name', '')
-            desc = request.form.get('description', '')
-            hr_service.create_department(name, desc)
-            flash(f'Đã thêm phòng ban {name}!', 'success')
-        except ValidationError as e:
+            if action == 'add':
+                name = request.form.get('name', '')
+                desc = request.form.get('description', '')
+                hr_service.create_department(name, desc)
+                flash(f'Đã thêm phòng ban {name}!', 'success')
+            elif action == 'edit':
+                dept_id = request.form.get('dept_id', type=int)
+                name = request.form.get('name', '')
+                desc = request.form.get('description', '')
+                hr_service.edit_department(dept_id, name, desc)
+                flash(f'Đã cập nhật phòng ban {name}!', 'success')
+            elif action == 'delete':
+                dept_id = request.form.get('dept_id', type=int)
+                hr_service.delete_department(dept_id)
+                flash('Đã xóa phòng ban thành công!', 'success')
+        except (ValidationError, BusinessException, EntityNotFoundException) as e:
             flash(e.message, 'danger')
+        except Exception as e:
+            flash(str(e), 'danger')
         return redirect(url_for('hr.departments_list'))
 
     departments = department_repo.get_all()

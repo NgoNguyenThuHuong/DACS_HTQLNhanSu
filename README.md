@@ -38,6 +38,7 @@ Hệ thống phân quyền chặt chẽ theo 3 nhóm đối tượng sử dụng
 - **Explainable AI (XAI) Dashboard**: Xem phân tích thời gian thực về rủi ro nghỉ việc của nhân viên, biểu đồ SHAP đóng góp biên trị, biểu đồ Radar năng lực cá nhân.
 - **Hệ khuyến nghị thông minh (Retention Recommendation)**: Nhận các đề xuất hành động thực tiễn (ưu tiên Cao/Trung bình) để giảm thiểu tỷ lệ nghỉ việc.
 - **Giám sát Chuyên cần & Công việc**: Quản lý chấm công bằng khuôn mặt (OpenCV), duyệt đơn nghỉ phép linh hoạt và phân bổ công việc.
+- **Quản lý Tuyển dụng (Recruitment & ATS)**: Quản lý đăng tuyển (Job Posts), quản lý ứng viên (Candidates), thiết lập bộ đề thi đánh giá năng lực ứng viên (Exams) tự động chấm điểm.
 
 ### 👤 Đối với Nhân viên (Employee)
 - **Check-in thông minh**: Điểm danh hàng ngày bằng nhận diện khuôn mặt hoặc mã QR bảo mật.
@@ -78,6 +79,7 @@ Hệ thống phân quyền chặt chẽ theo 3 nhóm đối tượng sử dụng
 3. Nhập cơ sở dữ liệu mẫu:
    ```powershell
    python setup_db.py
+   python seed_recruitment_data.py
    ```
 
 ### Bước 3: Khởi chạy Ứng dụng

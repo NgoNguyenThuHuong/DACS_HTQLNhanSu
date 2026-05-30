@@ -131,6 +131,29 @@ class HRService:
             
         return new_dept
 
+    def edit_department(self, dept_id: int, name: str, description: str):
+        dept = self.department_repo.get_by_id(dept_id)
+        if not dept:
+            raise EntityNotFoundException("Không tìm thấy phòng ban.")
+            
+        name = name.strip()
+        if not name:
+            raise ValidationError("Tên phòng ban không được để trống.")
+            
+        with UnitOfWork():
+            dept.name = name
+            dept.description = description
+            
+    def delete_department(self, dept_id: int):
+        dept = self.department_repo.get_by_id(dept_id)
+        if not dept:
+            raise EntityNotFoundException("Không tìm thấy phòng ban.")
+            
+        if dept.employees and len(dept.employees) > 0:
+            raise BusinessException("Không thể xóa phòng ban đang có nhân viên.")
+            
+        with UnitOfWork():
+            self.department_repo.delete(dept)
     # --- DUYỆT NGHỈ PHÉP ---
     def approve_or_reject_leave(self, req_id: int, action: str):
         leave_req = self.leave_repo.get_by_id_with_employee(req_id)
