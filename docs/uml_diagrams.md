@@ -9,27 +9,27 @@ Tài liệu này cung cấp các biểu đồ thiết kế hệ thống quan tr�
 Mô tả sự tương tác giữa các tác nhân (Actors) và các chức năng của hệ thống.
 
 ```mermaid
-usecaseDiagram
-    actor Employee as "Nhân viên (Employee)"
-    actor HR as "Quản lý Nhân sự (HR)"
-    actor Admin as "Quản trị viên (Admin)"
-    actor Candidate as "Ứng viên (Candidate)"
+flowchart LR
+    %% Định nghĩa các Actor bằng hình chữ nhật
+    Employee[Nhân viên]
+    HR[Quản lý Nhân sự]
+    Admin[Quản trị viên]
+    Candidate[Ứng viên]
     
-    %% Chức năng của Ứng viên
-    usecase "Xem Tin tuyển dụng" as UC_C1
-    usecase "Nộp Hồ sơ ứng tuyển" as UC_C2
-    usecase "Làm bài thi Trắc nghiệm (Exam)" as UC_C3
+    %% Định nghĩa các Use Case bằng hình oval/tròn
+    UC_C1([Xem Tin tuyển dụng])
+    UC_C2([Nộp Hồ sơ ứng tuyển])
+    UC_C3([Làm bài thi Trắc nghiệm])
     
     Candidate --> UC_C1
     Candidate --> UC_C2
     Candidate --> UC_C3
 
-    %% Chức năng của Nhân viên
-    usecase "Đăng nhập / Đăng xuất" as UC_E1
-    usecase "Điểm danh (Check-in/out)" as UC_E2
-    usecase "Gửi Đơn xin nghỉ phép" as UC_E3
-    usecase "Nhận và Cập nhật Task" as UC_E4
-    usecase "Xem Hồ sơ cá nhân" as UC_E5
+    UC_E1([Đăng nhập / Đăng xuất])
+    UC_E2([Điểm danh])
+    UC_E3([Gửi Đơn xin nghỉ phép])
+    UC_E4([Nhận và Cập nhật Task])
+    UC_E5([Xem Hồ sơ cá nhân])
     
     Employee --> UC_E1
     Employee --> UC_E2
@@ -37,12 +37,11 @@ usecaseDiagram
     Employee --> UC_E4
     Employee --> UC_E5
 
-    %% Chức năng của HR
-    usecase "Quản lý Hồ sơ nhân sự" as UC_H1
-    usecase "Duyệt Đơn nghỉ phép" as UC_H2
-    usecase "Giao việc (Giao Task)" as UC_H3
-    usecase "Quản lý Tuyển dụng & Đề thi" as UC_H4
-    usecase "Xem Báo cáo AI (XAI Dashboard)" as UC_H5
+    UC_H1([Quản lý Hồ sơ nhân sự])
+    UC_H2([Duyệt Đơn nghỉ phép])
+    UC_H3([Giao việc])
+    UC_H4([Quản lý Tuyển dụng & Đề thi])
+    UC_H5([Xem Báo cáo AI XAI Dashboard])
     
     HR --> UC_E1
     HR --> UC_H1
@@ -51,9 +50,8 @@ usecaseDiagram
     HR --> UC_H4
     HR --> UC_H5
 
-    %% Quản trị viên kế thừa HR và thêm chức năng
-    usecase "Quản lý Phòng ban" as UC_A1
-    usecase "Quản lý Phân quyền hệ thống" as UC_A2
+    UC_A1([Quản lý Phòng ban])
+    UC_A2([Quản lý Phân quyền hệ thống])
     
     Admin --> UC_E1
     Admin --> UC_H1
