@@ -35,15 +35,15 @@ Việc tin học hóa lĩnh vực này mang lại các lợi ích to lớn:
 
 ## 2.1 Danh sách thực thể
 Hệ thống xoay quanh các thực thể chính như sau:
-* `EMPLOYEE`(**id**, employee_code, fullname, email, phone, position, employment_status, years_in_company, created_at)
-* `DEPARTMENT`(**id**, name, description, created_at)
-* `ATTENDANCE`(**id**, work_date, check_in, check_out, status, total_work_hours, overtime_hours)
-* `TASK`(**id**, title, description, due_date, status, created_at)
-* `LEAVE_REQUEST`(**id**, leave_type, reason, start_date, end_date, status, created_at)
-* `EMPLOYEE_ANALYTICS`(**id**, job_satisfaction, monthly_income, performance_rating)
-* `RECRUITMENT_JOBS`(**id**, title, description, requirements, status, created_at)
-* `CANDIDATES`(**id**, job_id, fullname, email, phone, status, created_at)
-* `EXAMS`(**id**, title, duration_minutes, pass_threshold, created_at)
+* `employees`(**id**, employee_code, fullname, email, phone, position, employment_status, years_in_company, created_at)
+* `departments`(**id**, name, description, created_at)
+* `attendance`(**id**, work_date, check_in, check_out, status, total_work_hours, overtime_hours)
+* `tasks`(**id**, title, description, due_date, status, created_at)
+* `leave_requests`(**id**, leave_type, reason, start_date, end_date, status, created_at)
+* `employee_analytics`(**id**, job_satisfaction, monthly_income, performance_rating)
+* `recruitment_jobs`(**id**, title, description, requirements, status, created_at)
+* `candidates`(**id**, job_id, fullname, email, phone, status, created_at)
+* `exams`(**id**, title, duration_minutes, pass_threshold, created_at)
 
 ## 2.2 Mô hình ERD (Entity-Relationship Diagram)
 
@@ -56,41 +56,41 @@ Sơ đồ quan hệ thực thể (ERD) thể hiện mối liên kết giữa cá
 
 ```mermaid
 erDiagram
-    DEPARTMENT ||--o{ EMPLOYEE : "has"
-    EMPLOYEE ||--o| EMPLOYEE_ANALYTICS : "has_analytics"
-    EMPLOYEE ||--o{ ATTENDANCE : "logs"
-    EMPLOYEE ||--o{ TASK : "assigned_to"
-    EMPLOYEE ||--o{ LEAVE_REQUEST : "makes"
+    departments ||--o{ employees : "has"
+    employees ||--o| employee_analytics : "has_analytics"
+    employees ||--o{ attendance : "logs"
+    employees ||--o{ tasks : "assigned_to"
+    employees ||--o{ leave_requests : "makes"
 
-    DEPARTMENT {
+    departments {
         int id PK
         string name
     }
-    EMPLOYEE {
+    employees {
         int id PK
         int department_id FK
         string fullname
         string employment_status
         float years_in_company
     }
-    EMPLOYEE_ANALYTICS {
+    employee_analytics {
         int id PK
         int employee_id FK
         int job_satisfaction
         float monthly_income
     }
-    ATTENDANCE {
+    attendance {
         int id PK
         int employee_id FK
         datetime check_in
         string status
     }
-    TASK {
+    tasks {
         int id PK
         int employee_id FK
         string status
     }
-    LEAVE_REQUEST {
+    leave_requests {
         int id PK
         int employee_id FK
         string status
@@ -113,10 +113,10 @@ Lược đồ quan hệ của các bảng (đã xác định khóa chính PK và
 
 ## 2.5 Ràng buộc toàn vẹn (RBTV)
 Để đảm bảo tính nhất quán của dữ liệu, hệ thống áp dụng các ràng buộc:
-- **RBTV Miền giá trị (Domain Constraint):** Trường `status` của `TASK` chỉ được nhận giá trị: 'Pending', 'In_Progress', 'Completed'. Cột `leave_days_quota` (số ngày phép) phải $\ge$ 0.
+- **RBTV Miền giá trị (Domain Constraint):** Trường `status` của `tasks` chỉ được nhận giá trị: 'Pending', 'In_Progress', 'Completed'. Cột `leave_days_quota` (số ngày phép) phải $\ge$ 0.
 - **RBTV Khóa ngoại (Referential Integrity):** Khi xóa một phòng ban, không được phép xóa nếu vẫn còn nhân viên tham chiếu đến phòng ban đó, hoặc sử dụng `ON DELETE CASCADE` tùy theo logic (đối với Task của Employee).
-- **RBTV Liên thuộc tính (Intra-relational Constraint):** Trong bảng `ATTENDANCE`, thời gian `check_out` bắt buộc phải lớn hơn hoặc bằng thời gian `check_in` cùng ngày.
-- **RBTV Liên bộ (Inter-relational Constraint):** Trong `LEAVE_REQUEST`, `end_date` không được nhỏ hơn `start_date`, và tổng số ngày xin nghỉ không được vượt quá `leave_days_quota` hiện có của Employee đó trong bảng `EMPLOYEE`.
+- **RBTV Liên thuộc tính (Intra-relational Constraint):** Trong bảng `attendance`, thời gian `check_out` bắt buộc phải lớn hơn hoặc bằng thời gian `check_in` cùng ngày.
+- **RBTV Liên bộ (Inter-relational Constraint):** Trong `leave_requests`, `end_date` không được nhỏ hơn `start_date`, và tổng số ngày xin nghỉ không được vượt quá `leave_days_quota` hiện có của Employee đó trong bảng `employees`.
 
 ## 2.6 UML (Unified Modeling Language)
 
