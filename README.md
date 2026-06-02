@@ -100,5 +100,35 @@ Xem thông tin tài khoản demo chi tiết trong file `tkmk.txt`:
 
 ---
 
-## 6. Sơ đồ Chỉ dẫn Mã nguồn
-Vui lòng tham khảo tài liệu [FILE_GUIDE.md](file:///c:/laragon/www/HTQLNhanSu1/DACS_HTQLNhanSu/FILE_GUIDE.md) để biết chi tiết chức năng cụ thể của từng tệp tin và cấu trúc gói (package) trong toàn dự án.
+## 6. Cấu trúc Thư mục Chi tiết
+
+Dự án được tổ chức theo **Clean Architecture** & **Modular Monolith**, phân tách rõ ràng tầng giao diện, logic nghiệp vụ, và tầng dữ liệu. Dưới đây là giải thích chi tiết chức năng của từng thư mục:
+
+```text
+DACS_HTQLNhanSu/
+├── app/                        # 🌟 Mã nguồn chính của ứng dụng Flask
+│   ├── ai/                     # Scripts hỗ trợ kỹ thuật trích xuất đặc trưng và huấn luyện mô hình AI
+│   ├── ai_engine/              # Động cơ Trí tuệ Nhân tạo cốt lõi (Inference Engine)
+│   │   ├── analytics/          # Xử lý tính toán, phân tích số liệu HR nâng cao (Metrics, Scoring)
+│   │   ├── ml/                 # Chứa bộ nội suy dự đoán (XGBoost), công cụ giải thích SHAP và dữ liệu mẫu
+│   │   └── utils/              # Các hàm tiện ích dùng chung cho AI engine
+│   ├── core/                   # Tầng Core: Quản lý Caching, Bảo mật (Decorators), Xử lý Exception, Logging
+│   ├── dtos/                   # Data Transfer Objects: Chuẩn hóa đóng gói dữ liệu truyền tải giữa các tầng
+│   ├── extensions/             # Khởi tạo các thành phần mở rộng của Flask (Database, Migrate, Auth...)
+│   ├── models/                 # Entities / Data Models: Các lớp định nghĩa cấu trúc bảng CSDL (SQLAlchemy)
+│   ├── repositories/           # Tầng Data Access (Repository Pattern): Chịu trách nhiệm truy xuất CSDL thuần
+│   ├── routes/                 # Tầng Presentation (Blueprints): Tiếp nhận API/HTTP Request và điều hướng
+│   └── services/               # Tầng Application (Business Logic): Xử lý nghiệp vụ cốt lõi của toàn hệ thống
+├── docs/                       # 📚 Tài liệu Đồ án: Chứa file phân tích thiết kế, biểu đồ UML, cấu trúc AI
+├── migrations/                 # Script quản lý phiên bản thay đổi cấu trúc CSDL (Alembic Migrations)
+├── scripts/                    # Chứa các tập lệnh tiện ích bổ trợ (VD: Sinh biểu đồ luồng hoạt động)
+├── static/                     # Tài nguyên Frontend tĩnh: CSS (Vanilla/Tailwind), JS, Images, Uploads
+├── templates/                  # Tầng Giao diện hiển thị: Các file HTML được viết theo cú pháp Jinja2
+├── tests/                      # Bộ kiểm thử chất lượng mã nguồn tự động (Unit Test / Integration Test)
+├── trained_models/             # Thư mục chứa các tệp mô hình đã qua huấn luyện (Backup)
+├── config.py                   # Chứa các biến môi trường và thiết lập cấu hình chung (Database URI, Secret Key)
+├── requirements.txt            # Danh sách thư viện Python cần cài đặt để chạy dự án
+├── run.py                      # 🚀 Điểm neo khởi chạy ứng dụng (Entry Point) chính
+├── setup_db.py                 # File script tự động khởi tạo cấu trúc các bảng CSDL lần đầu tiên
+└── seed_*.py                   # Các file tự động phát sinh dữ liệu mẫu (Mock data) cho hệ thống
+```
